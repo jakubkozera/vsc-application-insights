@@ -1,0 +1,220 @@
+{
+  "name": "azure-application-insights-explorer",
+  "displayName": "Azure App Insights Explorer",
+  "description": "Browse Azure Application Insights and Log Analytics data directly inside VS Code — without switching to Azure Portal.",
+  "version": "0.1.0",
+  "publisher": "jakubkozera",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jakubkozera/vsc-application-insights.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other",
+    "Azure"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "media/icon.png",
+  "activationEvents": [
+    "onView:appInsightsExplorer.connectionsView"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "appInsightsExplorer",
+          "title": "App Insights Explorer",
+          "icon": "media/app-insights.svg"
+        }
+      ]
+    },
+    "views": {
+      "appInsightsExplorer": [
+        {
+          "id": "appInsightsExplorer.connectionsView",
+          "name": "Connections",
+          "icon": "media/app-insights.svg",
+          "contextualTitle": "App Insights Explorer"
+        },
+        {
+          "id": "appInsightsExplorer.savedQueriesView",
+          "name": "Saved Queries",
+          "icon": "$(bookmark)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "appInsightsExplorer.connectionsView",
+        "contents": "No Application Insights connections have been added yet.\n[Add Connection](command:appInsightsExplorer.addConnection)\nConnect using Microsoft Entra ID or an API key."
+      },
+      {
+        "view": "appInsightsExplorer.savedQueriesView",
+        "contents": "No saved queries yet.\nRun a query and save it to see it here."
+      }
+    ],
+    "commands": [
+      {
+        "command": "appInsightsExplorer.addConnection",
+        "title": "Add Connection",
+        "category": "App Insights",
+        "icon": "$(add)"
+      },
+      {
+        "command": "appInsightsExplorer.removeConnection",
+        "title": "Remove Connection",
+        "category": "App Insights",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "appInsightsExplorer.editConnection",
+        "title": "Edit Connection",
+        "category": "App Insights",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "appInsightsExplorer.refreshTree",
+        "title": "Refresh",
+        "category": "App Insights",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "appInsightsExplorer.openTable",
+        "title": "Browse Table",
+        "category": "App Insights"
+      },
+      {
+        "command": "appInsightsExplorer.openQueryEditor",
+        "title": "New KQL Query",
+        "category": "App Insights",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "appInsightsExplorer.runQuery",
+        "title": "Run Query",
+        "category": "App Insights",
+        "icon": "$(play)"
+      },
+      {
+        "command": "appInsightsExplorer.saveQuery",
+        "title": "Save Query",
+        "category": "App Insights",
+        "icon": "$(save)"
+      },
+      {
+        "command": "appInsightsExplorer.deleteQuery",
+        "title": "Delete Query",
+        "category": "App Insights",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "appInsightsExplorer.runSavedQuery",
+        "title": "Run Saved Query",
+        "category": "App Insights",
+        "icon": "$(play)"
+      },
+      {
+        "command": "appInsightsExplorer.setActiveConnection",
+        "title": "Set as Active Connection",
+        "category": "App Insights"
+      },
+      {
+        "command": "appInsightsExplorer.focus",
+        "title": "Focus on App Insights Explorer",
+        "category": "App Insights"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "appInsightsExplorer.removeConnection", "when": "false" },
+        { "command": "appInsightsExplorer.editConnection", "when": "false" },
+        { "command": "appInsightsExplorer.openTable", "when": "false" },
+        { "command": "appInsightsExplorer.deleteQuery", "when": "false" },
+        { "command": "appInsightsExplorer.runSavedQuery", "when": "false" },
+        { "command": "appInsightsExplorer.setActiveConnection", "when": "false" }
+      ],
+      "view/title": [
+        {
+          "command": "appInsightsExplorer.addConnection",
+          "when": "view == appInsightsExplorer.connectionsView",
+          "group": "navigation"
+        },
+        {
+          "command": "appInsightsExplorer.refreshTree",
+          "when": "view == appInsightsExplorer.connectionsView",
+          "group": "navigation"
+        },
+        {
+          "command": "appInsightsExplorer.openQueryEditor",
+          "when": "view == appInsightsExplorer.connectionsView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "appInsightsExplorer.removeConnection",
+          "when": "viewItem == connection",
+          "group": "inline"
+        },
+        {
+          "command": "appInsightsExplorer.editConnection",
+          "when": "viewItem == connection"
+        },
+        {
+          "command": "appInsightsExplorer.setActiveConnection",
+          "when": "viewItem == connection"
+        },
+        {
+          "command": "appInsightsExplorer.openTable",
+          "when": "viewItem == logTable"
+        },
+        {
+          "command": "appInsightsExplorer.runSavedQuery",
+          "when": "viewItem == savedQuery",
+          "group": "inline"
+        },
+        {
+          "command": "appInsightsExplorer.deleteQuery",
+          "when": "viewItem == savedQuery"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "kql",
+        "aliases": ["KQL", "Kusto Query Language"],
+        "extensions": [".kql", ".kusto"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "kql",
+        "scopeName": "source.kql",
+        "path": "./syntaxes/kql.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
+    "build:webviews": "cd webviews && npm run build",
+    "build:all": "npm run build && npm run build:webviews",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@azure/monitor-query": "^1.3.0",
+    "@azure/identity": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.5"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "scopeName": "source.kql",
+  "name": "KQL",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#keywords" },
+    { "include": "#functions" },
+    { "include": "#tables" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.kql",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.kql",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.kql", "match": "\\\\." }
+          ]
+        },
+        {
+          "name": "string.quoted.single.kql",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            { "name": "constant.character.escape.kql", "match": "\\\\." }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.kql",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.kql",
+          "match": "\\b(and|or|not|in|!in|has|!has|has_cs|contains|!contains|startswith|endswith|matches regex|between|==|!=|<|>|<=|>=)\\b"
+        },
+        {
+          "name": "keyword.operator.pipe.kql",
+          "match": "\\|"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.kql",
+          "match": "\\b(where|project|extend|summarize|order|sort|by|asc|desc|top|take|limit|join|on|let|datatable|union|render|count|distinct|mv-expand|parse|evaluate|as|ago|now|bin|todynamic|tostring|toint|tolong|todouble|todatetime|totimespan|if|case|iff)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "support.function.kql",
+          "match": "\\b(count|sum|avg|min|max|percentile|dcount|stdev|variance|make_list|make_set|arg_max|arg_min|any|countif|sumif|avgif|dcountif|strcat|substring|strlen|tolower|toupper|trim|replace|split|extract|parse_json|format_datetime|datetime_diff|startofday|startofweek|startofmonth|endofday|endofweek|endofmonth|floor|ceiling|round|log|exp|pow|sqrt|isnull|isnotnull|isempty|isnotempty|coalesce|pack|bag_keys|array_length|tostring|toint|tolong|todouble|tobool|todatetime|totimespan|hash|ingestion_time)\\b"
+        }
+      ]
+    },
+    "tables": {
+      "patterns": [
+        {
+          "name": "entity.name.type.table.kql",
+          "match": "\\b(requests|exceptions|traces|dependencies|customEvents|customMetrics|pageViews|availabilityResults|performanceCounters|browserTimings)\\b"
+        }
+      ]
+    }
+  }
+}

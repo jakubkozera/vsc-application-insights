@@ -1,0 +1,25 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
+}
+
+.select {
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-input-background));
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: var(--vscode-font-size);
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--vscode-focusBorder);
+}

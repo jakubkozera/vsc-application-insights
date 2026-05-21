@@ -1,0 +1,228 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 40px 16px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  max-height: 70vh;
+  background: var(--vscode-editorWidget-background, var(--vscode-sideBar-background));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.closeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+}
+
+.closeBtn:hover {
+  color: var(--vscode-foreground);
+  background: color-mix(in srgb, var(--vscode-foreground) 10%, transparent);
+}
+
+.presetsSection {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.presetsLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+}
+
+.presetsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.presetItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--vscode-button-secondaryBackground);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.presetBtn {
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--vscode-button-secondaryForeground);
+  cursor: pointer;
+  border: none;
+  background: none;
+  white-space: nowrap;
+}
+
+.presetBtn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.presetDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.presetDeleteBtn:hover {
+  color: var(--vscode-errorForeground);
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.actionBtn {
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  cursor: pointer;
+}
+
+.actionBtn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.columnList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.columnItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  cursor: grab;
+  transition: background 0.1s;
+}
+
+.columnItem:hover {
+  background: color-mix(in srgb, var(--vscode-foreground) 5%, transparent);
+}
+
+.columnItem.dropTarget {
+  border-top: 2px solid var(--vscode-focusBorder);
+}
+
+.columnItem.dragging {
+  opacity: 0.4;
+}
+
+.grip {
+  color: var(--vscode-descriptionForeground);
+  display: inline-flex;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.columnLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkbox {
+  accent-color: var(--vscode-button-background);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.saveSection {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.presetNameInput {
+  flex: 1;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  color: var(--vscode-input-foreground);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  outline: none;
+}
+
+.presetNameInput:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.saveBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.saveBtn:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

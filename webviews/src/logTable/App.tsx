@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useVSCodeMessaging } from '@shared/hooks';
-import { Button, Dropdown, LoadingOverlay, RowDetailPanel } from '@shared/components';
-import { IconRefresh, IconFilter, IconX } from '@tabler/icons-react';
+import { useVSCodeMessaging, useColumnSettings } from '@shared/hooks';
+import { Button, ColumnSettingsPanel, Dropdown, LoadingOverlay, RowDetailPanel } from '@shared/components';
+import { IconRefresh, IconFilter, IconX, IconSettings } from '@tabler/icons-react';
 import styles from './LogTable.module.css';
 
 interface Column {
@@ -129,6 +129,11 @@ export const App: React.FC = () => {
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
+  const {
+    columnConfig, visibleColumns, presets, showSettings, setShowSettings,
+    handleColumnsChange, handleSavePreset, handleLoadPreset, handleDeletePreset
+  } = useColumnSettings({ allColumns: result?.columns ?? [], postMessage, subscribe });
+
   useEffect(() => {
     if (!activeFilter) return;
     const handler = (e: MouseEvent) => {
@@ -211,6 +216,9 @@ export const App: React.FC = () => {
           <Button variant="icon" onClick={runQuery} title="Refresh">
             <IconRefresh size={16} />
           </Button>
+          <Button variant="icon" onClick={() => setShowSettings(true)} title="Column settings">
+            <IconSettings size={16} />
+          </Button>
         </div>
       </div>
 
@@ -226,7 +234,7 @@ export const App: React.FC = () => {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  {result.columns.map(col => {
+                  {visibleColumns.map(col => {
                     const type = getColumnFilterType(col.type);
                     const ops = getOpsForType(type);
                     const defaultOp = getDefaultOp(type);
@@ -276,7 +284,7 @@ export const App: React.FC = () => {
                     className={`${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
                     onClick={() => setSelectedRow(selectedRow === row ? null : row)}
                   >
-                    {result.columns.map(col => (
+                    {visibleColumns.map(col => (
                       <td key={col.name} className={styles.td}>
                         {formatValue(row[col.name])}
                       </td>
@@ -291,6 +299,18 @@ export const App: React.FC = () => {
             <RowDetailPanel row={selectedRow} onClose={() => setSelectedRow(null)} />
           )}
         </>
+      )}
+
+      {showSettings && (
+        <ColumnSettingsPanel
+          columns={columnConfig}
+          presets={presets}
+          onColumnsChange={handleColumnsChange}
+          onSavePreset={handleSavePreset}
+          onLoadPreset={handleLoadPreset}
+          onDeletePreset={handleDeletePreset}
+          onClose={() => setShowSettings(false)}
+        />
       )}
     </div>
   );

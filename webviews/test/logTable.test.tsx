@@ -12,6 +12,17 @@ vi.mock('@shared/hooks', () => ({
     subscribe: mockSubscribe,
     vscode: { postMessage: mockPostMessage, getState: vi.fn(), setState: vi.fn() }
   }),
+  useColumnSettings: ({ allColumns }: any) => ({
+    columnConfig: (allColumns || []).map((c: any) => ({ name: c.name, visible: true })),
+    visibleColumns: allColumns || [],
+    presets: [],
+    showSettings: false,
+    setShowSettings: vi.fn(),
+    handleColumnsChange: vi.fn(),
+    handleSavePreset: vi.fn(),
+    handleLoadPreset: vi.fn(),
+    handleDeletePreset: vi.fn(),
+  }),
   useDebounce: (v: any) => v
 }));
 

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ConnectionStore } from '../state/connectionStore';
 import { QueryStore } from '../state/queryStore';
+import { ColumnSettingsStore } from '../state/columnSettingsStore';
 import { QueryService } from '../services/queryService';
 import { WebviewHost } from '../webviews/webviewHost';
 import { LogTableItem, SavedQueryItem } from '../providers/treeItems';
@@ -9,11 +10,32 @@ import { Logger } from '../logging/logger';
 
 const openPanels = new Map<string, WebviewHost>();
 
+function handleColumnSettingsMessages(msg: any, host: WebviewHost, columnStore: ColumnSettingsStore): boolean {
+  if (msg.command === 'getColumnPresets') {
+    host.post({ command: 'columnPresets', presets: columnStore.listPresets() });
+    return true;
+  }
+  if (msg.command === 'saveColumnPreset') {
+    columnStore.savePreset(msg.name, msg.columns).then(preset => {
+      host.post({ command: 'columnPresets', presets: columnStore.listPresets() });
+    });
+    return true;
+  }
+  if (msg.command === 'deleteColumnPreset') {
+    columnStore.deletePreset(msg.id).then(() => {
+      host.post({ command: 'columnPresets', presets: columnStore.listPresets() });
+    });
+    return true;
+  }
+  return false;
+}
+
 export function registerQueryCommands(
   context: vscode.ExtensionContext,
   store: ConnectionStore,
   queryStore: QueryStore,
-  queryService: QueryService
+  queryService: QueryService,
+  columnStore: ColumnSettingsStore
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('appInsightsExplorer.openTable', async (item: LogTableItem) => {
@@ -42,6 +64,7 @@ export function registerQueryCommands(
       host.onDispose(() => openPanels.delete(panelKey));
 
       host.onMessage(async (msg: any) => {
+        if (handleColumnSettingsMessages(msg, host, columnStore)) return;
         if (msg.command === 'query') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? { range: '1h' };
@@ -83,6 +106,7 @@ export function registerQueryCommands(
       host.onDispose(() => openPanels.delete(panelKey));
 
       host.onMessage(async (msg: any) => {
+        if (handleColumnSettingsMessages(msg, host, columnStore)) return;
         if (msg.command === 'runQuery') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? { range: '1h' };
@@ -128,6 +152,9 @@ export function registerQueryCommands(
             title: 'Query Results',
             bundleId: 'queryResults',
             initData: { result }
+          });
+          host.onMessage(async (msg: any) => {
+            handleColumnSettingsMessages(msg, host, columnStore);
           });
         } catch (e: any) {
           vscode.window.showErrorMessage(`Query failed: ${e.message}`);

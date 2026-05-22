@@ -56,8 +56,11 @@ export class QueryService {
     }
   }
 
-  async runTableQuery(connectionId: string, tableName: string, timeRange: TimeRangeValue, top: number = 50): Promise<QueryResult> {
-    const kql = `${tableName} | top ${top} by timestamp desc`;
+  async runTableQuery(connectionId: string, tableName: string, timeRange: TimeRangeValue, top?: number): Promise<QueryResult> {
+    const sanitizedTop = typeof top === 'number' && top > 0 ? Math.floor(top) : undefined;
+    const kql = sanitizedTop
+      ? `${tableName} | order by timestamp desc | take ${sanitizedTop}`
+      : `${tableName} | order by timestamp desc`;
     return this.runQuery(connectionId, kql, timeRange);
   }
 

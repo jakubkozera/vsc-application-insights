@@ -123,11 +123,13 @@ const TIME_RANGES = [
   { label: 'Last 7 days', value: '7d' },
 ];
 
+const DEFAULT_TIME_RANGE = '24h';
+
 const SAMPLE_QUERIES: Record<string, string> = {
-  requests: 'requests\n| where timestamp > ago(1h)\n| top 50 by timestamp desc\n| project timestamp, name, resultCode, duration, url',
-  exceptions: 'exceptions\n| where timestamp > ago(1h)\n| top 50 by timestamp desc\n| project timestamp, type, outerMessage, innermostMessage',
-  traces: 'traces\n| where timestamp > ago(1h)\n| top 50 by timestamp desc\n| project timestamp, message, severityLevel',
-  dependencies: 'dependencies\n| where timestamp > ago(1h)\n| top 50 by timestamp desc\n| project timestamp, name, type, target, duration, success',
+  requests: 'requests\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, name, resultCode, duration, url',
+  exceptions: 'exceptions\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, type, outerMessage, innermostMessage',
+  traces: 'traces\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, message, severityLevel',
+  dependencies: 'dependencies\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, name, type, target, duration, success',
 };
 
 export const App: React.FC = () => {
@@ -137,7 +139,7 @@ export const App: React.FC = () => {
   const [result, setResult] = useState<QueryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState('1h');
+  const [timeRange, setTimeRange] = useState(DEFAULT_TIME_RANGE);
   const [connectionId, setConnectionId] = useState('');
   const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
   const [filter, setFilter] = useState('');

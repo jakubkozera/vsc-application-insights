@@ -117,6 +117,8 @@ const TIME_RANGES = [
   { label: 'Last 7 days', value: '7d' },
 ];
 
+const DEFAULT_TIME_RANGE = '24h';
+
 const GROUP_BY_OPTIONS = [
   { label: 'No grouping', value: '' },
   { label: 'operation_Name', value: 'operation_Name' },
@@ -137,7 +139,7 @@ export const App: React.FC = () => {
   const [result, setResult] = useState<QueryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState('1h');
+  const [timeRange, setTimeRange] = useState(DEFAULT_TIME_RANGE);
   const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
   const [filter, setFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
@@ -183,7 +185,7 @@ export const App: React.FC = () => {
     if (!initData) return;
     setLoading(true);
     setError(null);
-    postMessage({ command: 'query', timeRange: { range: timeRange }, top: 50 });
+    postMessage({ command: 'query', timeRange: { range: timeRange } });
   }, [postMessage, initData, timeRange]);
 
   useEffect(() => {
@@ -193,7 +195,7 @@ export const App: React.FC = () => {
   const handleTimeRangeChange = (value: string) => {
     setTimeRange(value);
     setLoading(true);
-    postMessage({ command: 'query', timeRange: { range: value }, top: 50 });
+    postMessage({ command: 'query', timeRange: { range: value } });
   };
 
   const filteredRows = useMemo(() => {

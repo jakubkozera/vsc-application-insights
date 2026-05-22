@@ -13,11 +13,13 @@ function createMockConnectionStore() {
 }
 
 function createMockClientFactory(mockResult: any) {
+  const queryWorkspace = vi.fn(async () => mockResult);
   return {
     getLogsClient: vi.fn(async () => ({
-      queryWorkspace: vi.fn(async () => mockResult),
+      queryWorkspace,
     })),
     getApiKey: vi.fn(async () => 'test-api-key'),
+    _queryWorkspace: queryWorkspace,
   };
 }
 
@@ -59,6 +61,11 @@ describe('QueryService', () => {
     expect(result.rows[1].resultCode).toBe(500);
     expect(result.statistics?.rowCount).toBe(2);
     expect(result.statistics?.executionTime).toBeGreaterThanOrEqual(0);
+    expect(factory._queryWorkspace).toHaveBeenCalledWith(
+      'ws-123',
+      'requests | order by timestamp desc',
+      { duration: 'PT1H' }
+    );
   });
 
   it('returns empty result for no tables', async () => {

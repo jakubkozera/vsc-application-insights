@@ -9,6 +9,7 @@ import { TimeRangeValue } from '../models/connection';
 import { Logger } from '../logging/logger';
 
 const openPanels = new Map<string, WebviewHost>();
+const DEFAULT_TIME_RANGE: TimeRangeValue = { range: '24h' };
 
 function handleColumnSettingsMessages(msg: any, host: WebviewHost, columnStore: ColumnSettingsStore): boolean {
   if (msg.command === 'getColumnPresets') {
@@ -67,12 +68,12 @@ export function registerQueryCommands(
         if (handleColumnSettingsMessages(msg, host, columnStore)) return;
         if (msg.command === 'query') {
           try {
-            const timeRange: TimeRangeValue = msg.timeRange ?? { range: '1h' };
+            const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
             const result = await queryService.runTableQuery(
               item.connectionId,
               item.tableName,
               timeRange,
-              msg.top ?? 50
+              msg.top
             );
             host.post({ command: 'queryResult', data: result });
           } catch (e: any) {
@@ -109,7 +110,7 @@ export function registerQueryCommands(
         if (handleColumnSettingsMessages(msg, host, columnStore)) return;
         if (msg.command === 'runQuery') {
           try {
-            const timeRange: TimeRangeValue = msg.timeRange ?? { range: '1h' };
+            const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
             const result = await queryService.runQuery(
               msg.connectionId ?? connection.id,
               msg.kql,
@@ -145,7 +146,7 @@ export function registerQueryCommands(
           return;
         }
         try {
-          const result = await queryService.runQuery(connection.id, kql, { range: '1h' });
+          const result = await queryService.runQuery(connection.id, kql, DEFAULT_TIME_RANGE);
           // Open results in a new webview
           const host = new WebviewHost(context, {
             viewType: 'appInsightsExplorer.queryResults',
@@ -219,7 +220,7 @@ export function registerQueryCommands(
       host.onMessage(async (msg: any) => {
         if (msg.command === 'runQuery') {
           try {
-            const timeRange: TimeRangeValue = msg.timeRange ?? { range: '1h' };
+            const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
             const result = await queryService.runQuery(
               msg.connectionId ?? connectionId,
               msg.kql,

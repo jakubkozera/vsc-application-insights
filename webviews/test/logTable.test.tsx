@@ -57,9 +57,16 @@ describe('LogTable App', () => {
     render(<App />);
     await waitFor(() => {
       expect(mockPostMessage).toHaveBeenCalledWith(
-        expect.objectContaining({ command: 'query' })
+        expect.objectContaining({
+          command: 'query',
+          timeRange: { range: '24h' }
+        })
       );
     });
+
+    expect(mockPostMessage).not.toHaveBeenCalledWith(
+      expect.objectContaining({ top: 50 })
+    );
   });
 
   it('displays results when received', async () => {

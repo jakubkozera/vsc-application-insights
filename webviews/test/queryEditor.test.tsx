@@ -83,7 +83,8 @@ describe('QueryEditor App', () => {
     expect(mockPostMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         command: 'runQuery',
-        kql: 'requests | take 10'
+        kql: 'requests | take 10',
+        timeRange: { range: '24h' }
       })
     );
   });
@@ -149,7 +150,9 @@ describe('QueryEditor App', () => {
 
     const textarea = screen.getByPlaceholderText(/Enter your KQL query/) as HTMLTextAreaElement;
     expect(textarea.value).toContain('requests');
-    expect(textarea.value).toContain('top 50');
+    expect(textarea.value).toContain('ago(24h)');
+    expect(textarea.value).toContain('order by timestamp desc');
+    expect(textarea.value).not.toContain('top 50');
   });
 
   it('shows initialQuery when provided', async () => {

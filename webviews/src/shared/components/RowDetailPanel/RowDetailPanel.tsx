@@ -37,7 +37,7 @@ function buildInitialTabs(row: Record<string, unknown>): Tab[] {
 
 export const RowDetailPanel: React.FC<RowDetailPanelProps> = ({ row, onClose }) => {
   const [tabs, setTabs] = useState<Tab[]>(() => buildInitialTabs(row));
-  const [activeTab, setActiveTab] = useState(() => hasCallStack(row) ? 1 : 0);
+  const [activeTab, setActiveTab] = useState(0);
   const [panelHeight, setPanelHeight] = useState(300);
   const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
 
@@ -105,7 +105,7 @@ export const RowDetailPanel: React.FC<RowDetailPanelProps> = ({ row, onClose }) 
   useEffect(() => {
     const newTabs = buildInitialTabs(row);
     setTabs(newTabs);
-    setActiveTab(hasCallStack(row) ? 1 : 0);
+    setActiveTab(0);
   }, [row]);
 
   return (

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useVSCodeMessaging, useColumnSettings } from '@shared/hooks';
 import { Button, ColumnSettingsPanel, Dropdown, LoadingOverlay, RowDetailPanel } from '@shared/components';
-import { IconRefresh, IconFilter, IconX, IconSettings } from '@tabler/icons-react';
+import { IconRefresh, IconFilter, IconX, IconSettings, IconList } from '@tabler/icons-react';
 import styles from './LogTable.module.css';
 
 interface Column {
@@ -117,6 +117,20 @@ const TIME_RANGES = [
   { label: 'Last 7 days', value: '7d' },
 ];
 
+const GROUP_BY_OPTIONS = [
+  { label: 'No grouping', value: '' },
+  { label: 'operation_Name', value: 'operation_Name' },
+  { label: 'cloud_RoleName', value: 'cloud_RoleName' },
+  { label: 'problemId', value: 'problemId' },
+];
+
+const EXCEPTION_TABLES = ['exceptions', 'exception'];
+
+interface GroupedRows {
+  key: string;
+  rows: Record<string, unknown>[];
+}
+
 export const App: React.FC = () => {
   const { postMessage, subscribe } = useVSCodeMessaging<any, any>();
   const [initData, setInitData] = useState<InitData | null>(null);
@@ -128,6 +142,8 @@ export const App: React.FC = () => {
   const [filter, setFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState('');
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   const {
     columnConfig, visibleColumns, presets, showSettings, setShowSettings,
@@ -199,6 +215,30 @@ export const App: React.FC = () => {
     return rows;
   }, [result, filter, columnFilters]);
 
+  const isExceptionTable = EXCEPTION_TABLES.includes(initData?.tableName?.toLowerCase() ?? '');
+
+  const groupedRows = useMemo((): GroupedRows[] | null => {
+    if (!groupBy || !isExceptionTable) return null;
+    const groups = new Map<string, Record<string, unknown>[]>();
+    for (const row of filteredRows) {
+      const key = String(row[groupBy] ?? '(empty)');
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(row);
+    }
+    return Array.from(groups.entries())
+      .map(([key, rows]) => ({ key, rows }))
+      .sort((a, b) => b.rows.length - a.rows.length);
+  }, [filteredRows, groupBy, isExceptionTable]);
+
+  const toggleGroup = useCallback((key: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
   return (
     <div className={styles.container}>
       <LoadingOverlay visible={loading} message="Running query..." />
@@ -212,6 +252,9 @@ export const App: React.FC = () => {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
+          {isExceptionTable && (
+            <Dropdown options={GROUP_BY_OPTIONS} value={groupBy} onChange={setGroupBy} />
+          )}
           <Dropdown options={TIME_RANGES} value={timeRange} onChange={handleTimeRangeChange} />
           <Button variant="icon" onClick={runQuery} title="Refresh">
             <IconRefresh size={16} />
@@ -278,19 +321,49 @@ export const App: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((row, idx) => (
-                  <tr
-                    key={idx}
-                    className={`${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
-                    onClick={() => setSelectedRow(selectedRow === row ? null : row)}
-                  >
-                    {visibleColumns.map(col => (
-                      <td key={col.name} className={styles.td}>
-                        {formatValue(row[col.name])}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {groupedRows ? (
+                  groupedRows.map(group => (
+                    <React.Fragment key={group.key}>
+                      <tr
+                        className={styles.groupHeader}
+                        onClick={() => toggleGroup(group.key)}
+                      >
+                        <td colSpan={visibleColumns.length} className={styles.groupHeaderCell}>
+                          <IconList size={12} />
+                          <span className={styles.groupKey}>{group.key}</span>
+                          <span className={styles.groupCount}>({group.rows.length})</span>
+                        </td>
+                      </tr>
+                      {!collapsedGroups.has(group.key) && group.rows.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          className={`${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
+                          onClick={() => setSelectedRow(selectedRow === row ? null : row)}
+                        >
+                          {visibleColumns.map(col => (
+                            <td key={col.name} className={styles.td}>
+                              {formatValue(row[col.name])}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  filteredRows.map((row, idx) => (
+                    <tr
+                      key={idx}
+                      className={`${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
+                      onClick={() => setSelectedRow(selectedRow === row ? null : row)}
+                    >
+                      {visibleColumns.map(col => (
+                        <td key={col.name} className={styles.td}>
+                          {formatValue(row[col.name])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

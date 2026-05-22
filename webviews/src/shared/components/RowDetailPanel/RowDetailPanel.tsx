@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CodeViewer } from '../CodeViewer/CodeViewer';
+import { CallStack } from '../CallStack/CallStack';
 import { IconCopy, IconX } from '@tabler/icons-react';
 import styles from './RowDetailPanel.module.css';
 
 interface Tab {
   label: string;
   content: string;
+  type?: 'json' | 'callstack';
 }
 
 export interface RowDetailPanelProps {
@@ -13,9 +15,29 @@ export interface RowDetailPanelProps {
   onClose?: () => void;
 }
 
+function hasCallStack(row: Record<string, unknown>): boolean {
+  const details = row.details;
+  if (typeof details !== 'string' || !details) return false;
+  try {
+    const parsed = JSON.parse(details);
+    const items = Array.isArray(parsed) ? parsed : [parsed];
+    return items.some(item => Array.isArray(item.parsedStack) && item.parsedStack.length > 0);
+  } catch {
+    return false;
+  }
+}
+
+function buildInitialTabs(row: Record<string, unknown>): Tab[] {
+  const tabs: Tab[] = [{ label: 'Row', content: JSON.stringify(row, null, 2), type: 'json' }];
+  if (hasCallStack(row)) {
+    tabs.push({ label: 'Call Stack', content: row.details as string, type: 'callstack' });
+  }
+  return tabs;
+}
+
 export const RowDetailPanel: React.FC<RowDetailPanelProps> = ({ row, onClose }) => {
-  const [tabs, setTabs] = useState<Tab[]>([{ label: 'Row', content: JSON.stringify(row, null, 2) }]);
-  const [activeTab, setActiveTab] = useState(0);
+  const [tabs, setTabs] = useState<Tab[]>(() => buildInitialTabs(row));
+  const [activeTab, setActiveTab] = useState(() => hasCallStack(row) ? 1 : 0);
   const [panelHeight, setPanelHeight] = useState(300);
   const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
 
@@ -59,7 +81,7 @@ export const RowDetailPanel: React.FC<RowDetailPanelProps> = ({ row, onClose }) 
     if (existingIdx !== -1) {
       setActiveTab(existingIdx);
     } else {
-      const newTabs = [...tabs, { label: key, content }];
+      const newTabs = [...tabs, { label: key, content, type: 'json' as const }];
       setTabs(newTabs);
       setActiveTab(newTabs.length - 1);
     }
@@ -81,9 +103,9 @@ export const RowDetailPanel: React.FC<RowDetailPanelProps> = ({ row, onClose }) 
 
   // Reset tabs when row changes
   useEffect(() => {
-    const rowJson = JSON.stringify(row, null, 2);
-    setTabs([{ label: 'Row', content: rowJson }]);
-    setActiveTab(0);
+    const newTabs = buildInitialTabs(row);
+    setTabs(newTabs);
+    setActiveTab(hasCallStack(row) ? 1 : 0);
   }, [row]);
 
   return (
@@ -118,11 +140,15 @@ export const RowDetailPanel: React.FC<RowDetailPanelProps> = ({ row, onClose }) 
         </div>
       </div>
       <div className={styles.content}>
-        <CodeViewer
-          value={tabs[activeTab]?.content ?? ''}
-          language="json"
-          onJsonStringClick={handleJsonStringClick}
-        />
+        {tabs[activeTab]?.type === 'callstack' ? (
+          <CallStack details={tabs[activeTab].content} />
+        ) : (
+          <CodeViewer
+            value={tabs[activeTab]?.content ?? ''}
+            language="json"
+            onJsonStringClick={handleJsonStringClick}
+          />
+        )}
       </div>
     </div>
   );

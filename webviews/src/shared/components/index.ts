@@ -1,4 +1,5 @@
 export { Button } from './Button/Button';
+export { CallStack } from './CallStack/CallStack';
 export { CodeViewer } from './CodeViewer/CodeViewer';
 export { ColumnSettingsPanel } from './ColumnSettingsPanel/ColumnSettingsPanel';
 export type { ColumnConfig, ColumnPreset } from './ColumnSettingsPanel/ColumnSettingsPanel';

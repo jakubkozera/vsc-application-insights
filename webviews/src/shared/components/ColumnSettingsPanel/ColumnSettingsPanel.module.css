@@ -130,6 +130,24 @@
   background: var(--vscode-button-secondaryHoverBackground);
 }
 
+.iconActionBtn {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  cursor: pointer;
+}
+
+.iconActionBtn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
 .columnList {
   flex: 1;
   overflow-y: auto;

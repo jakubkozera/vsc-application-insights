@@ -178,8 +178,8 @@ export const App: React.FC = () => {
 
   const {
     columnConfig, visibleColumns, presets, showSettings, setShowSettings,
-    handleColumnsChange, handleSavePreset, handleLoadPreset, handleDeletePreset
-  } = useColumnSettings({ allColumns: result?.columns ?? [], postMessage, subscribe });
+    handleColumnsChange, handleSavePreset, handleLoadPreset, handleDeletePreset, handleAutoSizeColumns
+  } = useColumnSettings({ allColumns: result?.columns ?? [], allRows: result?.rows ?? [], postMessage, subscribe });
 
   useEffect(() => {
     if (!activeFilter) return;
@@ -286,7 +286,8 @@ export const App: React.FC = () => {
       id: col.name,
       headerClassName: styles.th,
       cellClassName: styles.td,
-      minWidth: 180,
+      minWidth: col.width ?? 96,
+      width: col.width,
       header: (
         <>
           <span className={styles.thContent}>
@@ -458,6 +459,7 @@ export const App: React.FC = () => {
             onRowClick={(row) => setSelectedRow(selectedRow === row ? null : row)}
             emptyState={<div className={styles.stats}>No matching rows</div>}
             ariaLabel="Query results"
+            onColumnResize={(columnId, width) => handleColumnsChange(columnConfig.map(column => column.name === columnId ? { ...column, width } : column))}
           />
 
           {selectedRow && (
@@ -474,6 +476,7 @@ export const App: React.FC = () => {
           onSavePreset={handleSavePreset}
           onLoadPreset={handleLoadPreset}
           onDeletePreset={handleDeletePreset}
+          onAutoSizeColumns={handleAutoSizeColumns}
           onClose={() => setShowSettings(false)}
         />
       )}

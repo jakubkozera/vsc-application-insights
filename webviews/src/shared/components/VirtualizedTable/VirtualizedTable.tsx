@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import styles from './VirtualizedTable.module.css';
 
@@ -9,7 +9,7 @@ export interface VirtualizedTableColumn<T> {
   headerClassName?: string;
   cellClassName?: string;
   minWidth?: number;
-  width?: string;
+  width?: string | number;
 }
 
 interface VirtualizedTableProps<T> {
@@ -26,6 +26,7 @@ interface VirtualizedTableProps<T> {
   gridTemplateColumns?: string;
   ariaLabel?: string;
   testId?: string;
+  onColumnResize?: (columnId: string, width: number) => void;
 }
 
 export function VirtualizedTable<T>({
@@ -42,16 +43,54 @@ export function VirtualizedTable<T>({
   gridTemplateColumns,
   ariaLabel,
   testId,
+  onColumnResize,
 }: VirtualizedTableProps<T>) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
+  const resizeStateRef = useRef<{ columnId: string; startX: number; startWidth: number; minWidth: number } | null>(null);
 
   const resolvedGridTemplateColumns = useMemo(() => {
     if (gridTemplateColumns) return gridTemplateColumns;
-    return columns.map((column) => column.width ?? `minmax(${column.minWidth ?? 160}px, 1fr)`).join(' ');
+    return columns.map((column) => {
+      if (typeof column.width === 'number') return `${column.width}px`;
+      if (typeof column.width === 'string') return column.width;
+      return `minmax(${column.minWidth ?? 160}px, 1fr)`;
+    }).join(' ');
   }, [columns, gridTemplateColumns]);
 
-  const minWidth = useMemo(() => columns.reduce((sum, column) => sum + (column.minWidth ?? 160), 0), [columns]);
+  const minWidth = useMemo(() => columns.reduce((sum, column) => {
+    if (typeof column.width === 'number') return sum + column.width;
+    return sum + (column.minWidth ?? 160);
+  }, 0), [columns]);
+
+  const handleResizeStart = useCallback((event: React.MouseEvent, column: VirtualizedTableColumn<T>) => {
+    if (!onColumnResize) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    resizeStateRef.current = {
+      columnId: column.id,
+      startX: event.clientX,
+      startWidth: typeof column.width === 'number' ? column.width : (column.minWidth ?? 160),
+      minWidth: column.minWidth ?? 96,
+    };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const currentState = resizeStateRef.current;
+      if (!currentState) return;
+      const delta = moveEvent.clientX - currentState.startX;
+      onColumnResize(currentState.columnId, Math.max(currentState.minWidth, currentState.startWidth + delta));
+    };
+
+    const handleMouseUp = () => {
+      resizeStateRef.current = null;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, [onColumnResize]);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -100,6 +139,15 @@ export function VirtualizedTable<T>({
           {columns.map((column) => (
             <div key={column.id} className={[styles.headerCell, column.headerClassName].filter(Boolean).join(' ')} role="columnheader">
               {column.header}
+              {onColumnResize && (
+                <div
+                  className={styles.resizeHandle}
+                  onMouseDown={(event) => handleResizeStart(event, column)}
+                  role="separator"
+                  aria-orientation="vertical"
+                  aria-label={`Resize ${column.id} column`}
+                />
+              )}
             </div>
           ))}
         </div>

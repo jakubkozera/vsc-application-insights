@@ -1,10 +1,11 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { IconGripVertical, IconX, IconDeviceFloppy, IconTrash } from '@tabler/icons-react';
+import { IconGripVertical, IconX, IconDeviceFloppy, IconTrash, IconArrowsHorizontal } from '@tabler/icons-react';
 import styles from './ColumnSettingsPanel.module.css';
 
 export interface ColumnConfig {
   name: string;
   visible: boolean;
+  width?: number;
 }
 
 export interface ColumnPreset {
@@ -20,6 +21,7 @@ export interface ColumnSettingsPanelProps {
   onSavePreset: (name: string, columns: string[]) => void;
   onLoadPreset: (preset: ColumnPreset) => void;
   onDeletePreset: (id: string) => void;
+  onAutoSizeColumns: () => void;
   onClose: () => void;
 }
 
@@ -30,6 +32,7 @@ export const ColumnSettingsPanel: React.FC<ColumnSettingsPanelProps> = ({
   onSavePreset,
   onLoadPreset,
   onDeletePreset,
+  onAutoSizeColumns,
   onClose,
 }) => {
   const [presetName, setPresetName] = useState('');
@@ -120,6 +123,9 @@ export const ColumnSettingsPanel: React.FC<ColumnSettingsPanelProps> = ({
         <div className={styles.actions}>
           <button className={styles.actionBtn} onClick={() => toggleAll(true)}>Show all</button>
           <button className={styles.actionBtn} onClick={() => toggleAll(false)}>Hide all</button>
+          <button className={styles.iconActionBtn} onClick={onAutoSizeColumns} title="Adjust column widths" aria-label="Adjust column widths">
+            <IconArrowsHorizontal size={13} />
+          </button>
         </div>
 
         <div className={styles.columnList} ref={listRef}>

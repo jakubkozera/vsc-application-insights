@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { VirtualizedTable } from '../src/shared/components';
 
 describe('VirtualizedTable', () => {
@@ -32,5 +32,33 @@ describe('VirtualizedTable', () => {
 
     expect(screen.getByText('Row 199')).toBeInTheDocument();
     expect(screen.queryByText('Row 0')).not.toBeInTheDocument();
+  });
+
+  it('emits column resize updates from the header handle', () => {
+    const onColumnResize = vi.fn();
+
+    render(
+      <VirtualizedTable
+        rows={[{ id: 1, name: 'Alpha' }]}
+        columns={[
+          {
+            id: 'name',
+            header: 'Name',
+            minWidth: 120,
+            width: 140,
+            renderCell: (row) => row.name,
+          },
+        ]}
+        rowKey={(row) => row.id}
+        onColumnResize={onColumnResize}
+      />
+    );
+
+    const separator = screen.getByRole('separator', { name: 'Resize name column' });
+    fireEvent.mouseDown(separator, { clientX: 100 });
+    fireEvent.mouseMove(window, { clientX: 148 });
+    fireEvent.mouseUp(window);
+
+    expect(onColumnResize).toHaveBeenCalledWith('name', 188);
   });
 });

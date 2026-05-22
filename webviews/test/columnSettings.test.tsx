@@ -20,6 +20,7 @@ const mockHandleColumnsChange = vi.fn();
 const mockHandleSavePreset = vi.fn();
 const mockHandleLoadPreset = vi.fn();
 const mockHandleDeletePreset = vi.fn();
+const mockHandleAutoSizeColumns = vi.fn();
 
 vi.mock('@shared/hooks', () => ({
   useVSCodeMessaging: () => ({
@@ -45,6 +46,7 @@ vi.mock('@shared/hooks', () => ({
       handleSavePreset: mockHandleSavePreset,
       handleLoadPreset: mockHandleLoadPreset,
       handleDeletePreset: mockHandleDeletePreset,
+      handleAutoSizeColumns: mockHandleAutoSizeColumns,
     };
   },
   useDebounce: (v: any) => v
@@ -86,6 +88,7 @@ describe('Column Settings Integration', () => {
       presets: [],
       showSettings: false,
     };
+    mockHandleAutoSizeColumns.mockClear();
   });
 
   it('renders settings button', async () => {
@@ -152,5 +155,18 @@ describe('Column Settings Integration', () => {
     await waitFor(() => {
       expect(screen.getByText('Column Settings')).toBeInTheDocument();
     });
+  });
+
+  it('calls autosize handler from ColumnSettingsPanel action', async () => {
+    columnSettingsState.showSettings = true;
+    render(<App />);
+    initWithData();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Adjust column widths')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('Adjust column widths'));
+    expect(mockHandleAutoSizeColumns).toHaveBeenCalledTimes(1);
   });
 });

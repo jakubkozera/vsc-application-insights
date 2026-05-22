@@ -5,7 +5,7 @@ import { ColumnSettingsStore } from '../state/columnSettingsStore';
 import { QueryService } from '../services/queryService';
 import { FailuresViewService, type FailuresTab, type FailuresSelection } from '../services/failuresViewService';
 import { WebviewHost } from '../webviews/webviewHost';
-import { ConnectionItem, FailuresItem, LogTableItem, SavedQueryItem } from '../providers/treeItems';
+import { ConnectionItem, FailuresItem, LogTableItem, SavedQueryItem, SearchItem } from '../providers/treeItems';
 import { TimeRangeValue } from '../models/connection';
 import { Logger } from '../logging/logger';
 
@@ -142,8 +142,14 @@ export function registerQueryCommands(
       });
     }),
 
-    vscode.commands.registerCommand('appInsightsExplorer.openQueryEditor', async () => {
-      const connection = store.getActive();
+    vscode.commands.registerCommand('appInsightsExplorer.openQueryEditor', async (item?: ConnectionItem | SearchItem) => {
+      const connectionId = item instanceof ConnectionItem
+        ? item.meta.id
+        : item instanceof SearchItem
+          ? item.connectionId
+          : store.getActiveId();
+
+      const connection = connectionId ? store.get(connectionId) : undefined;
       if (!connection) {
         vscode.window.showWarningMessage('No active connection. Add a connection first.');
         return;
@@ -152,12 +158,13 @@ export function registerQueryCommands(
       const panelKey = `kql:${connection.id}:${Date.now()}`;
       const host = new WebviewHost(context, {
         viewType: 'appInsightsExplorer.queryEditor',
-        title: `KQL - ${connection.displayName}`,
+        title: `Search - ${connection.displayName}`,
         bundleId: 'queryEditor',
         initData: {
           connectionId: connection.id,
           connectionName: connection.displayName,
-          connections: store.list().map(c => ({ id: c.id, name: c.displayName }))
+          connections: store.list().map(c => ({ id: c.id, name: c.displayName })),
+          initialMode: 'search'
         }
       });
 

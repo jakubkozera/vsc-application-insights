@@ -25,6 +25,7 @@ interface InitData {
   connectionName: string;
   connections: ConnectionOption[];
   initialQuery?: string;
+  initialMode?: QueryMode;
 }
 
 type QueryMode = 'search' | 'kql';
@@ -137,6 +138,19 @@ const SEARCH_TABLES = [
   'dependencies',
 ] as const;
 
+const KQL_KEYWORDS = new Set([
+  'and', 'as', 'asc', 'by', 'contains', 'desc', 'distinct', 'extend', 'false', 'from', 'has', 'in', 'isfuzzy',
+  'join', 'let', 'limit', 'not', 'null', 'on', 'or', 'order', 'project', 'render', 'serialize', 'summarize',
+  'take', 'top', 'true', 'union', 'where'
+]);
+
+const KQL_FUNCTIONS = new Set([
+  'ago', 'avg', 'bin', 'case', 'coalesce', 'count', 'datetime', 'format_datetime', 'iff', 'isnotempty', 'isempty',
+  'make_set', 'max', 'min', 'parse_json', 'percentile', 'replace_string', 'split', 'startofday', 'strcat', 'sum', 'todynamic', 'tostring'
+]);
+
+const KQL_TABLES = new Set([...SEARCH_TABLES, 'customEvents']);
+
 const SAMPLE_QUERIES: Record<string, string> = {
   requests: 'requests\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, name, resultCode, duration, url',
   exceptions: 'exceptions\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, type, outerMessage, innermostMessage',
@@ -150,6 +164,8 @@ export const App: React.FC = () => {
   const [queryMode, setQueryMode] = useState<QueryMode>('search');
   const [searchText, setSearchText] = useState('');
   const [kql, setKql] = useState('');
+  const [editorScrollTop, setEditorScrollTop] = useState(0);
+  const [editorScrollLeft, setEditorScrollLeft] = useState(0);
   const [result, setResult] = useState<QueryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -183,6 +199,9 @@ export const App: React.FC = () => {
         const data = msg.data as InitData;
         setInitData(data);
         setConnectionId(data.connectionId);
+        if (data.initialMode) {
+          setQueryMode(data.initialMode);
+        }
         if (data.initialQuery) {
           setQueryMode('kql');
           setKql(data.initialQuery);
@@ -206,6 +225,13 @@ export const App: React.FC = () => {
     }
     return buildSearchQuery(searchText, timeRange, new Date());
   }, [kql, queryMode, searchText, timeRange]);
+
+  const lineNumbers = useMemo(() => {
+    const lineCount = Math.max(1, kql.split('\n').length);
+    return Array.from({ length: lineCount }, (_, index) => index + 1);
+  }, [kql]);
+
+  const highlightedKql = useMemo(() => renderHighlightedKql(kql), [kql]);
 
   const runQuery = useCallback(() => {
     const query = queryMode === 'kql' ? kql.trim() : buildSearchQuery(searchText, timeRange).trim();
@@ -358,7 +384,6 @@ export const App: React.FC = () => {
               aria-label="Search text"
             />
             <div className={styles.searchHint}>Search builds a cross-table KQL query across core telemetry tables.</div>
-            <pre className={styles.queryPreview}>{effectiveQuery || 'Enter text to generate the KQL preview.'}</pre>
           </div>
         ) : (
           <>
@@ -369,14 +394,37 @@ export const App: React.FC = () => {
                 </button>
               ))}
             </div>
-            <textarea
-              className={styles.editor}
-              value={kql}
-              onChange={(e) => setKql(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Enter your KQL query here...&#10;&#10;Press Ctrl+Shift+Enter to run"
-              spellCheck={false}
-            />
+            <div className={styles.kqlEditorShell}>
+              <div className={styles.kqlEditorSurface}>
+                <pre
+                  className={styles.editorHighlight}
+                  aria-hidden="true"
+                  data-testid="kql-editor-highlight"
+                  style={{ transform: `translate(${-editorScrollLeft}px, ${-editorScrollTop}px)` }}
+                >
+                  {highlightedKql}
+                </pre>
+                <textarea
+                  className={`${styles.editorInput} ${kql ? styles.editorInputOverlay : ''}`}
+                  value={kql}
+                  onChange={(e) => setKql(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onScroll={(e) => {
+                    setEditorScrollTop(e.currentTarget.scrollTop);
+                    setEditorScrollLeft(e.currentTarget.scrollLeft);
+                  }}
+                  placeholder="Enter your KQL query here...&#10;&#10;Press Ctrl+Shift+Enter to run"
+                  spellCheck={false}
+                />
+              </div>
+              <div className={styles.lineNumbers} aria-hidden="true" data-testid="kql-line-numbers">
+                <div className={styles.lineNumbersInner} style={{ transform: `translateY(${-editorScrollTop}px)` }}>
+                  {lineNumbers.map((lineNumber) => (
+                    <span key={lineNumber} className={styles.lineNumber}>{lineNumber}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
@@ -464,6 +512,45 @@ function getTimeRangeMilliseconds(timeRange: string): number {
 
 function escapeKqlString(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function renderHighlightedKql(value: string): React.ReactNode {
+  if (!value) return <span className={styles.editorPlaceholder}>Enter your KQL query here...</span>;
+
+  const lines = value.split('\n');
+  return lines.map((line, lineIndex) => (
+    <React.Fragment key={`line-${lineIndex}`}>
+      {tokenizeKqlLine(line, lineIndex)}
+      {lineIndex < lines.length - 1 ? '\n' : null}
+    </React.Fragment>
+  ));
+}
+
+function tokenizeKqlLine(line: string, lineIndex: number): React.ReactNode[] {
+  const pattern = /(\/\/.*$|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\|\s*|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][A-Za-z0-9_\-]*\b|\s+|.)/g;
+  const tokens = line.match(pattern) ?? [];
+
+  return tokens.map((token, tokenIndex) => {
+    const className = classifyKqlToken(token);
+    if (!className) {
+      return <React.Fragment key={`${lineIndex}-${tokenIndex}`}>{token}</React.Fragment>;
+    }
+
+    return <span key={`${lineIndex}-${tokenIndex}`} className={className}>{token}</span>;
+  });
+}
+
+function classifyKqlToken(token: string): string | null {
+  const normalized = token.trim().toLowerCase();
+  if (!normalized) return null;
+  if (token.startsWith('//')) return styles.tokenComment;
+  if (token.startsWith('"') || token.startsWith('\'')) return styles.tokenString;
+  if (/^\|\s*$/.test(token)) return styles.tokenPipe;
+  if (/^\d/.test(token)) return styles.tokenNumber;
+  if (KQL_KEYWORDS.has(normalized)) return styles.tokenKeyword;
+  if (KQL_FUNCTIONS.has(normalized)) return styles.tokenFunction;
+  if (KQL_TABLES.has(normalized)) return styles.tokenTable;
+  return null;
 }
 
 function formatValue(value: unknown): string {

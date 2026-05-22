@@ -85,6 +85,11 @@ describe('QueryEditor App', () => {
     expect(screen.getByPlaceholderText(/Search across traces/)).toBeInTheDocument();
   });
 
+  it('does not show KQL preview in search mode', () => {
+    render(<App />);
+    expect(screen.queryByText(/union isfuzzy=true/)).not.toBeInTheDocument();
+  });
+
   it('sends runQuery with generated union KQL in search mode', async () => {
     render(<App />);
     await waitFor(() => {
@@ -204,15 +209,22 @@ describe('QueryEditor App', () => {
     });
   });
 
-  it('shows generated KQL preview in search mode', async () => {
+  it('renders KQL editor with line numbers and highlighted content', async () => {
     render(<App />);
 
-    const searchInput = screen.getByPlaceholderText(/Search across traces/);
-    fireEvent.change(searchInput, { target: { value: 'project' } });
+    fireEvent.click(screen.getByRole('tab', { name: 'KQL mode' }));
+
+    const textarea = screen.getByPlaceholderText(/Enter your KQL query/) as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: 'requests\n| where timestamp > ago(24h)' } });
+
+    const lineNumbers = screen.getByTestId('kql-line-numbers');
+    const highlight = screen.getByTestId('kql-editor-highlight');
 
     await waitFor(() => {
-      expect(screen.getByText(/union isfuzzy=true/)).toBeInTheDocument();
-      expect(screen.getByText(/where \* has "project"/)).toBeInTheDocument();
+      expect(lineNumbers).toHaveTextContent('1');
+      expect(lineNumbers).toHaveTextContent('2');
+      expect(highlight).toHaveTextContent('requests');
+      expect(highlight).toHaveTextContent('where timestamp > ago(24h)');
     });
   });
 });

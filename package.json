@@ -87,7 +87,7 @@
       },
       {
         "command": "appInsightsExplorer.openQueryEditor",
-        "title": "New KQL Query",
+        "title": "Open Search",
         "category": "App Insights",
         "icon": "$(new-file)"
       },
@@ -152,16 +152,6 @@
           "command": "appInsightsExplorer.refreshTree",
           "when": "view == appInsightsExplorer.connectionsView",
           "group": "navigation"
-        },
-        {
-          "command": "appInsightsExplorer.openQueryEditor",
-          "when": "view == appInsightsExplorer.connectionsView",
-          "group": "navigation"
-        },
-        {
-          "command": "appInsightsExplorer.openFailures",
-          "when": "view == appInsightsExplorer.connectionsView",
-          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -180,7 +170,11 @@
         },
         {
           "command": "appInsightsExplorer.openFailures",
-          "when": "viewItem == connection || viewItem == failures"
+          "when": "viewItem == failures"
+        },
+        {
+          "command": "appInsightsExplorer.openQueryEditor",
+          "when": "viewItem == search"
         },
         {
           "command": "appInsightsExplorer.openTable",

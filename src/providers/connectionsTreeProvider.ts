@@ -6,7 +6,8 @@ import {
   FailuresItem,
   LogTablesFolderItem,
   LogTableItem,
-  PlaceholderItem
+  PlaceholderItem,
+  SearchItem
 } from './treeItems';
 
 const LOG_TABLES: { name: LogTable; label: string }[] = [
@@ -42,7 +43,7 @@ export class ConnectionsTreeProvider implements vscode.TreeDataProvider<vscode.T
     }
 
     if (element instanceof ConnectionItem) {
-      return [new FailuresItem(element.meta.id), new LogTablesFolderItem(element.meta.id)];
+      return [new SearchItem(element.meta.id), new FailuresItem(element.meta.id), new LogTablesFolderItem(element.meta.id)];
     }
 
     if (element instanceof LogTablesFolderItem) {

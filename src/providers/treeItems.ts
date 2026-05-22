@@ -40,6 +40,20 @@ export class LogTablesFolderItem extends vscode.TreeItem {
   }
 }
 
+export class SearchItem extends vscode.TreeItem {
+  constructor(public readonly connectionId: string) {
+    super('Search', vscode.TreeItemCollapsibleState.None);
+    this.contextValue = 'search';
+    this.id = `conn:${connectionId}:search`;
+    this.iconPath = new vscode.ThemeIcon('search');
+    this.command = {
+      command: 'appInsightsExplorer.openQueryEditor',
+      title: 'Open Search',
+      arguments: [this]
+    };
+  }
+}
+
 export class FailuresItem extends vscode.TreeItem {
   constructor(public readonly connectionId: string) {
     super('Failures', vscode.TreeItemCollapsibleState.None);
@@ -51,7 +65,6 @@ export class FailuresItem extends vscode.TreeItem {
       title: 'Open Failures',
       arguments: [this]
     };
-    this.description = 'Portal view';
   }
 }
 

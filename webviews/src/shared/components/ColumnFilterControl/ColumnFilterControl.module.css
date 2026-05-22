@@ -1,0 +1,159 @@
+.filterBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s, background 0.12s;
+}
+
+.filterBtnVisible,
+.filterBtn:focus,
+.filterBtnActive {
+  opacity: 1;
+}
+
+.filterBtnActive {
+  color: var(--vscode-button-background);
+}
+
+.filterBtn:hover {
+  background: color-mix(in srgb, var(--vscode-foreground) 10%, transparent);
+  color: var(--vscode-foreground);
+}
+
+.filterPopup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  min-width: 240px;
+  max-width: 320px;
+  background: var(--vscode-editorWidget-background, var(--vscode-sideBar-background));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filterSelect {
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  color: var(--vscode-input-foreground);
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.filterSelect:focus,
+.textInput:focus,
+.valueSearchInput:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.textInput,
+.valueSearchInput {
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  color: var(--vscode-input-foreground);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+  width: 100%;
+}
+
+.filterClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+}
+
+.filterClear:hover {
+  color: var(--vscode-errorForeground);
+}
+
+.valueSection {
+  border-top: 1px solid var(--vscode-panel-border);
+  padding-top: 8px;
+}
+
+.valueSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.valueSectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.valueAction {
+  border: none;
+  background: none;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+}
+
+.valueList {
+  max-height: 180px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.valueItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  min-width: 0;
+}
+
+.valueCheckbox {
+  margin: 0;
+  accent-color: var(--vscode-button-background);
+}
+
+.valueLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyMessage {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}

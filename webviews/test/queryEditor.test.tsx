@@ -31,6 +31,11 @@ vi.mock('@shared/components', async () => {
     ...actual,
     VirtualizedTable: ({ rows, columns, onRowClick }: any) => (
       <div>
+        <div>
+          {columns.map((column: any) => (
+            <div key={`header-${column.id}`}>{column.header}</div>
+          ))}
+        </div>
         {rows.map((row: any, rowIndex: number) => (
           <div key={rowIndex} onClick={() => onRowClick?.(row, rowIndex)}>
             {columns.map((column: any) => (
@@ -165,6 +170,84 @@ describe('QueryEditor App', () => {
     await waitFor(() => {
       expect(screen.getByText('1 rows • 55ms')).toBeInTheDocument();
       expect(screen.getByText('Hello world')).toBeInTheDocument();
+    });
+  });
+
+  it('renders a datetime filter input for timestamp columns', async () => {
+    mockSubscribe.mockImplementation((handler: any) => {
+      setTimeout(() => {
+        handler({
+          command: 'init',
+          data: {
+            connectionId: 'c1',
+            connectionName: 'Prod',
+            connections: [{ id: 'c1', name: 'Prod' }]
+          }
+        });
+        handler({
+          command: 'queryResult',
+          data: {
+            columns: [{ name: 'timestamp', type: 'datetime' }, { name: 'message', type: 'string' }],
+            rows: [{ timestamp: '2026-05-22T12:00:00.0000000Z', message: 'Hello world' }],
+            statistics: { executionTime: 55, rowCount: 1 }
+          }
+        });
+      }, 0);
+      return () => {};
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Filter timestamp')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('Filter timestamp'));
+
+    const input = await screen.findByLabelText('Filter timestamp value');
+    expect(input).toHaveAttribute('type', 'datetime-local');
+  });
+
+  it('filters string columns by checked value list items', async () => {
+    mockSubscribe.mockImplementation((handler: any) => {
+      setTimeout(() => {
+        handler({
+          command: 'init',
+          data: {
+            connectionId: 'c1',
+            connectionName: 'Prod',
+            connections: [{ id: 'c1', name: 'Prod' }]
+          }
+        });
+        handler({
+          command: 'queryResult',
+          data: {
+            columns: [{ name: 'source', type: 'string' }, { name: 'message', type: 'string' }],
+            rows: [
+              { source: 'api', message: 'First row' },
+              { source: 'worker', message: 'Second row' }
+            ],
+            statistics: { executionTime: 55, rowCount: 2 }
+          }
+        });
+      }, 0);
+      return () => {};
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Filter source')).toBeInTheDocument();
+      expect(screen.getByText('First row')).toBeInTheDocument();
+      expect(screen.getByText('Second row')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('Filter source'));
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'worker' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('First row')).toBeInTheDocument();
+      expect(screen.queryByText('Second row')).not.toBeInTheDocument();
     });
   });
 

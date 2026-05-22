@@ -156,13 +156,15 @@ function calculateColumnWidths(columns: Column[], rows: Record<string, unknown>[
 
 function estimateColumnWidth(header: string, rows: Record<string, unknown>[], columnName: string): number {
   const sampledRows = rows.slice(0, 200);
-  const maxValueLength = sampledRows.reduce((maxLength, row) => {
-    const currentLength = formatCellValue(row[columnName]).length;
-    return Math.max(maxLength, currentLength);
-  }, header.length);
+  const valueLengths = sampledRows
+    .map((row) => formatCellValue(row[columnName]).length)
+    .filter((length) => length > 0)
+    .sort((left, right) => left - right);
 
-  const baseWidth = Math.max(header.length, maxValueLength, 6) * 7.4;
-  return Math.max(96, Math.min(420, Math.round(baseWidth + 34)));
+  const percentileIndex = valueLengths.length > 0 ? Math.min(valueLengths.length - 1, Math.floor(valueLengths.length * 0.85)) : 0;
+  const representativeLength = valueLengths[percentileIndex] ?? header.length;
+  const baseWidth = Math.max(header.length, representativeLength, 6) * 7.2;
+  return Math.max(96, Math.min(360, Math.round(baseWidth + 30)));
 }
 
 function formatCellValue(value: unknown): string {

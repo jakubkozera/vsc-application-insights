@@ -92,6 +92,12 @@
         "icon": "$(new-file)"
       },
       {
+        "command": "appInsightsExplorer.openFailures",
+        "title": "Open Failures",
+        "category": "App Insights",
+        "icon": "$(graph)"
+      },
+      {
         "command": "appInsightsExplorer.runQuery",
         "title": "Run Query",
         "category": "App Insights",
@@ -131,6 +137,7 @@
         { "command": "appInsightsExplorer.removeConnection", "when": "false" },
         { "command": "appInsightsExplorer.editConnection", "when": "false" },
         { "command": "appInsightsExplorer.openTable", "when": "false" },
+        { "command": "appInsightsExplorer.openFailures", "when": "false" },
         { "command": "appInsightsExplorer.deleteQuery", "when": "false" },
         { "command": "appInsightsExplorer.runSavedQuery", "when": "false" },
         { "command": "appInsightsExplorer.setActiveConnection", "when": "false" }
@@ -150,6 +157,11 @@
           "command": "appInsightsExplorer.openQueryEditor",
           "when": "view == appInsightsExplorer.connectionsView",
           "group": "navigation"
+        },
+        {
+          "command": "appInsightsExplorer.openFailures",
+          "when": "view == appInsightsExplorer.connectionsView",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -165,6 +177,10 @@
         {
           "command": "appInsightsExplorer.setActiveConnection",
           "when": "viewItem == connection"
+        },
+        {
+          "command": "appInsightsExplorer.openFailures",
+          "when": "viewItem == connection || viewItem == failures"
         },
         {
           "command": "appInsightsExplorer.openTable",

@@ -40,6 +40,21 @@ export class LogTablesFolderItem extends vscode.TreeItem {
   }
 }
 
+export class FailuresItem extends vscode.TreeItem {
+  constructor(public readonly connectionId: string) {
+    super('Failures', vscode.TreeItemCollapsibleState.None);
+    this.contextValue = 'failures';
+    this.id = `conn:${connectionId}:failures`;
+    this.iconPath = new vscode.ThemeIcon('graph');
+    this.command = {
+      command: 'appInsightsExplorer.openFailures',
+      title: 'Open Failures',
+      arguments: [this]
+    };
+    this.description = 'Portal view';
+  }
+}
+
 export class LogTableItem extends vscode.TreeItem {
   constructor(
     public readonly connectionId: string,

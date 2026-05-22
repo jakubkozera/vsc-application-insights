@@ -34,6 +34,69 @@
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
+.modeTabs {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 0;
+}
+
+.modeTab {
+  border: 1px solid var(--vscode-panel-border);
+  background: color-mix(in srgb, var(--vscode-sideBar-background) 68%, transparent);
+  color: var(--vscode-foreground);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.modeTabActive {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
+}
+
+.searchSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 16px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  outline: none;
+  font-size: 13px;
+}
+
+.searchInput:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.searchHint {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.queryPreview {
+  margin: 0;
+  padding: 12px;
+  background: color-mix(in srgb, var(--vscode-editor-background) 86%, black 14%);
+  color: var(--vscode-editor-foreground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow: auto;
+  max-height: 220px;
+}
+
 .sampleButtons {
   display: flex;
   gap: 4px;

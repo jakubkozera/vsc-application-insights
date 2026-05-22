@@ -3,6 +3,7 @@ import { ConnectionStore } from '../state/connectionStore';
 import { LogTable } from '../models/connection';
 import {
   ConnectionItem,
+  FailuresItem,
   LogTablesFolderItem,
   LogTableItem,
   PlaceholderItem
@@ -41,7 +42,7 @@ export class ConnectionsTreeProvider implements vscode.TreeDataProvider<vscode.T
     }
 
     if (element instanceof ConnectionItem) {
-      return [new LogTablesFolderItem(element.meta.id)];
+      return [new FailuresItem(element.meta.id), new LogTablesFolderItem(element.meta.id)];
     }
 
     if (element instanceof LogTablesFolderItem) {

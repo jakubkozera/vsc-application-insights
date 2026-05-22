@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ConnectionsTreeProvider } from '../src/providers/connectionsTreeProvider';
-import { ConnectionItem, LogTablesFolderItem, LogTableItem } from '../src/providers/treeItems';
+import { ConnectionItem, FailuresItem, LogTablesFolderItem, LogTableItem } from '../src/providers/treeItems';
 
 function createMockStore(connections: any[] = []) {
   const _onDidChange = { event: vi.fn(), fire: vi.fn() };
@@ -37,7 +37,7 @@ describe('ConnectionsTreeProvider', () => {
     expect((children[0] as ConnectionItem).meta.displayName).toBe('Production');
   });
 
-  it('returns log tables folder for a connection', async () => {
+  it('returns failures and log tables for a connection', async () => {
     const connections = [
       { id: 'c1', displayName: 'Prod', resourceId: 'app-1', resourceType: 'appInsights', authMode: 'aad', createdAt: '2024-01-01' },
     ];
@@ -46,8 +46,9 @@ describe('ConnectionsTreeProvider', () => {
 
     const root = await tree.getChildren();
     const connectionChildren = await tree.getChildren(root[0]);
-    expect(connectionChildren).toHaveLength(1);
-    expect(connectionChildren[0]).toBeInstanceOf(LogTablesFolderItem);
+    expect(connectionChildren).toHaveLength(2);
+    expect(connectionChildren[0]).toBeInstanceOf(FailuresItem);
+    expect(connectionChildren[1]).toBeInstanceOf(LogTablesFolderItem);
   });
 
   it('returns 5 log table items under the folder', async () => {

@@ -6,3 +6,5 @@ export type { ColumnConfig, ColumnPreset } from './ColumnSettingsPanel/ColumnSet
 export { Dropdown } from './Dropdown/Dropdown';
 export { LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
 export { RowDetailPanel } from './RowDetailPanel/RowDetailPanel';
+export { VirtualizedTable } from './VirtualizedTable/VirtualizedTable';
+export type { VirtualizedTableColumn } from './VirtualizedTable/VirtualizedTable';

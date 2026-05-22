@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useVSCodeMessaging, useColumnSettings } from '@shared/hooks';
-import { Button, ColumnSettingsPanel, Dropdown, LoadingOverlay, RowDetailPanel } from '@shared/components';
+import { Button, ColumnSettingsPanel, Dropdown, LoadingOverlay, RowDetailPanel, VirtualizedTable } from '@shared/components';
 import { IconRefresh, IconFilter, IconX, IconSettings, IconList } from '@tabler/icons-react';
 import styles from './LogTable.module.css';
 
@@ -133,6 +133,10 @@ interface GroupedRows {
   rows: Record<string, unknown>[];
 }
 
+type DisplayRow =
+  | { kind: 'group'; key: string; label: string; count: number }
+  | { kind: 'data'; key: string; row: Record<string, unknown> };
+
 export const App: React.FC = () => {
   const { postMessage, subscribe } = useVSCodeMessaging<any, any>();
   const [initData, setInitData] = useState<InitData | null>(null);
@@ -241,6 +245,81 @@ export const App: React.FC = () => {
     });
   }, []);
 
+  const displayRows = useMemo<DisplayRow[]>(() => {
+    if (!groupedRows) {
+      return filteredRows.map((row, idx) => ({ kind: 'data', key: `row:${idx}`, row }));
+    }
+
+    return groupedRows.flatMap(group => {
+      const items: DisplayRow[] = [{ kind: 'group', key: `group:${group.key}`, label: group.key, count: group.rows.length }];
+      if (!collapsedGroups.has(group.key)) {
+        items.push(...group.rows.map((row, idx) => ({ kind: 'data', key: `row:${group.key}:${idx}`, row })));
+      }
+      return items;
+    });
+  }, [collapsedGroups, filteredRows, groupedRows]);
+
+  const tableColumns = useMemo(() => visibleColumns.map((col, columnIndex) => {
+    const type = getColumnFilterType(col.type);
+    const ops = getOpsForType(type);
+    const defaultOp = getDefaultOp(type);
+    return {
+      id: col.name,
+      headerClassName: styles.th,
+      cellClassName: styles.td,
+      minWidth: 180,
+      header: (
+        <>
+          <span className={styles.thContent}>
+            {col.name}
+            <button
+              className={`${styles.filterBtn} ${columnFilters[col.name] ? styles.filterBtnActive : ''}`}
+              onClick={(e) => { e.stopPropagation(); setActiveFilter(activeFilter === col.name ? null : col.name); }}
+              title="Filter"
+            >
+              <IconFilter size={12} stroke={2} />
+            </button>
+          </span>
+          {activeFilter === col.name && (
+            <div className={styles.filterPopup} onClick={(e) => e.stopPropagation()}>
+              <select
+                className={styles.filterSelect}
+                value={columnFilters[col.name]?.op ?? defaultOp}
+                onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { ...p[col.name] ?? { op: defaultOp, value: '' }, op: e.target.value as FilterOp } }))}
+              >
+                {ops.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <input
+                className={styles.colFilterInput}
+                type={type === 'number' ? 'number' : 'text'}
+                placeholder="Value…"
+                autoFocus
+                value={columnFilters[col.name]?.value ?? ''}
+                onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { op: p[col.name]?.op ?? defaultOp, value: e.target.value } }))}
+              />
+              <button className={styles.filterClear} onClick={() => { setColumnFilters(p => { const n = { ...p }; delete n[col.name]; return n; }); setActiveFilter(null); }}>
+                <IconX size={12} />
+              </button>
+            </div>
+          )}
+        </>
+      ),
+      renderCell: (item: DisplayRow) => {
+        if (item.kind === 'group') {
+          return columnIndex === 0 ? (
+            <span className={styles.groupHeaderCell}>
+              <IconList size={12} />
+              <span className={styles.groupKey}>{item.label}</span>
+              <span className={styles.groupCount}>({item.count})</span>
+            </span>
+          ) : null;
+        }
+
+        return formatValue(item.row[col.name]);
+      },
+    };
+  }), [activeFilter, columnFilters, visibleColumns]);
+
   return (
     <div className={styles.container}>
       <LoadingOverlay visible={loading} message="Running query..." />
@@ -275,100 +354,22 @@ export const App: React.FC = () => {
             {result.statistics?.rowCount} rows • {result.statistics?.executionTime}ms
           </div>
 
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  {visibleColumns.map(col => {
-                    const type = getColumnFilterType(col.type);
-                    const ops = getOpsForType(type);
-                    const defaultOp = getDefaultOp(type);
-                    return (
-                      <th key={col.name} className={styles.th}>
-                        <span className={styles.thContent}>
-                          {col.name}
-                          <button
-                            className={`${styles.filterBtn} ${columnFilters[col.name] ? styles.filterBtnActive : ''}`}
-                            onClick={(e) => { e.stopPropagation(); setActiveFilter(activeFilter === col.name ? null : col.name); }}
-                            title="Filter"
-                          >
-                            <IconFilter size={12} stroke={2} />
-                          </button>
-                        </span>
-                        {activeFilter === col.name && (
-                          <div className={styles.filterPopup} onClick={(e) => e.stopPropagation()}>
-                            <select
-                              className={styles.filterSelect}
-                              value={columnFilters[col.name]?.op ?? defaultOp}
-                              onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { ...p[col.name] ?? { op: defaultOp, value: '' }, op: e.target.value as FilterOp } }))}
-                            >
-                              {ops.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                            </select>
-                            <input
-                              className={styles.colFilterInput}
-                              type={type === 'number' ? 'number' : 'text'}
-                              placeholder="Value…"
-                              autoFocus
-                              value={columnFilters[col.name]?.value ?? ''}
-                              onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { op: p[col.name]?.op ?? defaultOp, value: e.target.value } }))}
-                            />
-                            <button className={styles.filterClear} onClick={() => { setColumnFilters(p => { const n = { ...p }; delete n[col.name]; return n; }); setActiveFilter(null); }}>
-                              <IconX size={12} />
-                            </button>
-                          </div>
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {groupedRows ? (
-                  groupedRows.map(group => (
-                    <React.Fragment key={group.key}>
-                      <tr
-                        className={styles.groupHeader}
-                        onClick={() => toggleGroup(group.key)}
-                      >
-                        <td colSpan={visibleColumns.length} className={styles.groupHeaderCell}>
-                          <IconList size={12} />
-                          <span className={styles.groupKey}>{group.key}</span>
-                          <span className={styles.groupCount}>({group.rows.length})</span>
-                        </td>
-                      </tr>
-                      {!collapsedGroups.has(group.key) && group.rows.map((row, idx) => (
-                        <tr
-                          key={idx}
-                          className={`${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
-                          onClick={() => setSelectedRow(selectedRow === row ? null : row)}
-                        >
-                          {visibleColumns.map(col => (
-                            <td key={col.name} className={styles.td}>
-                              {formatValue(row[col.name])}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))
-                ) : (
-                  filteredRows.map((row, idx) => (
-                    <tr
-                      key={idx}
-                      className={`${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
-                      onClick={() => setSelectedRow(selectedRow === row ? null : row)}
-                    >
-                      {visibleColumns.map(col => (
-                        <td key={col.name} className={styles.td}>
-                          {formatValue(row[col.name])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <VirtualizedTable
+            rows={displayRows}
+            columns={tableColumns}
+            wrapperClassName={styles.tableWrapper}
+            rowKey={(item) => item.key}
+            rowClassName={(item) => item.kind === 'group' ? styles.groupHeader : `${styles.tr} ${selectedRow === item.row ? styles.selected : ''}`}
+            onRowClick={(item) => {
+              if (item.kind === 'group') {
+                toggleGroup(item.label);
+                return;
+              }
+              setSelectedRow(selectedRow === item.row ? null : item.row);
+            }}
+            emptyState={<div className={styles.stats}>No matching rows</div>}
+            ariaLabel="Log table results"
+          />
 
           {selectedRow && (
             <RowDetailPanel row={selectedRow} onClose={() => setSelectedRow(null)} />

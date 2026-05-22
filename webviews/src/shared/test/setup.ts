@@ -8,4 +8,11 @@ const vscode = {
   setState: vi.fn(),
 };
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 (window as any).acquireVsCodeApi = vi.fn(() => vscode);
+(window as any).ResizeObserver = ResizeObserverMock;

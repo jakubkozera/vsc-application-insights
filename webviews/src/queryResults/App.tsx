@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useVSCodeMessaging, useColumnSettings } from '@shared/hooks';
-import { Button, ColumnSettingsPanel, RowDetailPanel } from '@shared/components';
+import { Button, ColumnSettingsPanel, RowDetailPanel, VirtualizedTable } from '@shared/components';
 import { IconFilter, IconX, IconSettings } from '@tabler/icons-react';
 import styles from './QueryResults.module.css';
 
@@ -160,6 +160,55 @@ export const App: React.FC = () => {
     return rows;
   })();
 
+  const tableColumns = visibleColumns.map(col => {
+    const type = getColumnFilterType(col.type);
+    const ops = getOpsForType(type);
+    const defaultOp = getDefaultOp(type);
+    return {
+      id: col.name,
+      headerClassName: styles.th,
+      cellClassName: styles.td,
+      minWidth: 180,
+      header: (
+        <>
+          <span className={styles.thContent}>
+            {col.name}
+            <button
+              className={`${styles.filterBtn} ${columnFilters[col.name] ? styles.filterBtnActive : ''}`}
+              onClick={(e) => { e.stopPropagation(); setActiveFilter(activeFilter === col.name ? null : col.name); }}
+              title="Filter"
+            >
+              <IconFilter size={12} stroke={2} />
+            </button>
+          </span>
+          {activeFilter === col.name && (
+            <div className={styles.filterPopup} onClick={(e) => e.stopPropagation()}>
+              <select
+                className={styles.filterSelect}
+                value={columnFilters[col.name]?.op ?? defaultOp}
+                onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { ...p[col.name] ?? { op: defaultOp, value: '' }, op: e.target.value as FilterOp } }))}
+              >
+                {ops.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <input
+                className={styles.colFilterInput}
+                type={type === 'number' ? 'number' : 'text'}
+                placeholder="Value…"
+                autoFocus
+                value={columnFilters[col.name]?.value ?? ''}
+                onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { op: p[col.name]?.op ?? defaultOp, value: e.target.value } }))}
+              />
+              <button className={styles.filterClear} onClick={() => { setColumnFilters(p => { const n = { ...p }; delete n[col.name]; return n; }); setActiveFilter(null); }}>
+                <IconX size={12} />
+              </button>
+            </div>
+          )}
+        </>
+      ),
+      renderCell: (row: Record<string, unknown>) => formatValue(row[col.name]),
+    };
+  });
+
   return (
     <div className={styles.container}>
       <div className={styles.toolbar}>
@@ -179,70 +228,16 @@ export const App: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              {visibleColumns.map(col => {
-                const type = getColumnFilterType(col.type);
-                const ops = getOpsForType(type);
-                const defaultOp = getDefaultOp(type);
-                return (
-                  <th key={col.name} className={styles.th}>
-                    <span className={styles.thContent}>
-                      {col.name}
-                      <button
-                        className={`${styles.filterBtn} ${columnFilters[col.name] ? styles.filterBtnActive : ''}`}
-                        onClick={(e) => { e.stopPropagation(); setActiveFilter(activeFilter === col.name ? null : col.name); }}
-                        title="Filter"
-                      >
-                        <IconFilter size={12} stroke={2} />
-                      </button>
-                    </span>
-                    {activeFilter === col.name && (
-                      <div className={styles.filterPopup} onClick={(e) => e.stopPropagation()}>
-                        <select
-                          className={styles.filterSelect}
-                          value={columnFilters[col.name]?.op ?? defaultOp}
-                          onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { ...p[col.name] ?? { op: defaultOp, value: '' }, op: e.target.value as FilterOp } }))}
-                        >
-                          {ops.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
-                        <input
-                          className={styles.colFilterInput}
-                          type={type === 'number' ? 'number' : 'text'}
-                          placeholder="Value…"
-                          autoFocus
-                          value={columnFilters[col.name]?.value ?? ''}
-                          onChange={(e) => setColumnFilters(p => ({ ...p, [col.name]: { op: p[col.name]?.op ?? defaultOp, value: e.target.value } }))}
-                        />
-                        <button className={styles.filterClear} onClick={() => { setColumnFilters(p => { const n = { ...p }; delete n[col.name]; return n; }); setActiveFilter(null); }}>
-                          <IconX size={12} />
-                        </button>
-                      </div>
-                    )}
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRows.map((row, idx) => (
-              <tr
-                key={idx}
-                className={`${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
-                onClick={() => setSelectedRow(selectedRow === row ? null : row)}
-              >
-                {visibleColumns.map(col => (
-                  <td key={col.name} className={styles.td}>
-                    {formatValue(row[col.name])}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <VirtualizedTable
+        rows={filteredRows}
+        columns={tableColumns}
+        wrapperClassName={styles.tableWrapper}
+        rowKey={(_, idx) => idx}
+        rowClassName={(row) => `${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
+        onRowClick={(row) => setSelectedRow(selectedRow === row ? null : row)}
+        emptyState={<div className={styles.empty}>No matching rows</div>}
+        ariaLabel="Saved query results"
+      />
 
       {selectedRow && (
         <RowDetailPanel row={selectedRow} onClose={() => setSelectedRow(null)} />

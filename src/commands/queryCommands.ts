@@ -3,8 +3,9 @@ import { ConnectionStore } from '../state/connectionStore';
 import { QueryStore } from '../state/queryStore';
 import { ColumnSettingsStore } from '../state/columnSettingsStore';
 import { QueryService } from '../services/queryService';
+import { FailuresViewService, type FailuresTab, type FailuresSelection } from '../services/failuresViewService';
 import { WebviewHost } from '../webviews/webviewHost';
-import { LogTableItem, SavedQueryItem } from '../providers/treeItems';
+import { ConnectionItem, FailuresItem, LogTableItem, SavedQueryItem } from '../providers/treeItems';
 import { TimeRangeValue } from '../models/connection';
 import { Logger } from '../logging/logger';
 
@@ -38,6 +39,8 @@ export function registerQueryCommands(
   queryService: QueryService,
   columnStore: ColumnSettingsStore
 ): void {
+  const failuresViewService = new FailuresViewService(queryService);
+
   context.subscriptions.push(
     vscode.commands.registerCommand('appInsightsExplorer.openTable', async (item: LogTableItem) => {
       const panelKey = `table:${item.connectionId}:${item.tableName}`;
@@ -80,6 +83,61 @@ export function registerQueryCommands(
             Logger.error('Table query failed', e.message);
             host.post({ command: 'queryError', error: e.message });
           }
+        }
+      });
+    }),
+
+    vscode.commands.registerCommand('appInsightsExplorer.openFailures', async (item?: ConnectionItem | FailuresItem) => {
+      const connectionId = item instanceof ConnectionItem
+        ? item.meta.id
+        : item instanceof FailuresItem
+          ? item.connectionId
+          : store.getActiveId();
+
+      if (!connectionId) {
+        vscode.window.showWarningMessage('No active connection. Add a connection first.');
+        return;
+      }
+
+      const connection = store.get(connectionId);
+      if (!connection) {
+        vscode.window.showWarningMessage('Connection not found.');
+        return;
+      }
+
+      const panelKey = `failures:${connection.id}`;
+      const existing = openPanels.get(panelKey);
+      if (existing) {
+        existing.reveal();
+        return;
+      }
+
+      const host = new WebviewHost(context, {
+        viewType: 'appInsightsExplorer.failures',
+        title: `Failures - ${connection.displayName}`,
+        bundleId: 'failures',
+        initData: {
+          connectionId: connection.id,
+          connectionName: connection.displayName
+        }
+      });
+
+      openPanels.set(panelKey, host);
+      host.onDispose(() => openPanels.delete(panelKey));
+
+      host.onMessage(async (msg: any) => {
+        if (msg.command !== 'loadFailures') return;
+        try {
+          const data = await failuresViewService.load(connection.id, {
+            tab: (msg.tab ?? 'operations') as FailuresTab,
+            timeRange: msg.timeRange ?? DEFAULT_TIME_RANGE,
+            selection: msg.selection as FailuresSelection | undefined,
+            selectedKey: msg.selectedKey,
+          });
+          host.post({ command: 'failuresData', data });
+        } catch (e: any) {
+          Logger.error('Failures view query failed', e.message);
+          host.post({ command: 'failuresError', error: e.message });
         }
       });
     }),

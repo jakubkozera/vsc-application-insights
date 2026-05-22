@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { App } from '../src/logTable/App';
 
 // Mock the messaging hook
@@ -25,6 +25,24 @@ vi.mock('@shared/hooks', () => ({
   }),
   useDebounce: (v: any) => v
 }));
+
+vi.mock('@shared/components', async () => {
+  const actual = await vi.importActual<any>('../src/shared/components');
+  return {
+    ...actual,
+    VirtualizedTable: ({ rows, columns, onRowClick }: any) => (
+      <div>
+        {rows.map((row: any, rowIndex: number) => (
+          <div key={rowIndex} onClick={() => onRowClick?.(row, rowIndex)}>
+            {columns.map((column: any) => (
+              <div key={column.id}>{column.renderCell(row, rowIndex)}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  };
+});
 
 describe('LogTable App', () => {
   beforeEach(() => {
@@ -114,9 +132,11 @@ describe('LogTable App', () => {
     });
 
     // Simulate error arriving after query was sent
-    messageHandler({
-      command: 'queryError',
-      error: 'Syntax error in query'
+    act(() => {
+      messageHandler({
+        command: 'queryError',
+        error: 'Syntax error in query'
+      });
     });
 
     await waitFor(() => {

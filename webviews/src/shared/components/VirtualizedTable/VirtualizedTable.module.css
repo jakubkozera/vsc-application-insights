@@ -1,0 +1,47 @@
+.wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+}
+
+.surface {
+  min-width: 100%;
+  width: max-content;
+}
+
+.headerRow {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+}
+
+.headerCell {
+  min-width: 0;
+  position: relative;
+}
+
+.body {
+  position: relative;
+}
+
+.row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: grid;
+}
+
+.cell {
+  min-width: 0;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.empty {
+  padding: 20px;
+  color: var(--vscode-descriptionForeground);
+}

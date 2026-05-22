@@ -25,6 +25,24 @@ vi.mock('@shared/hooks', () => ({
   useDebounce: (v: any) => v
 }));
 
+vi.mock('@shared/components', async () => {
+  const actual = await vi.importActual<any>('../src/shared/components');
+  return {
+    ...actual,
+    VirtualizedTable: ({ rows, columns, onRowClick }: any) => (
+      <div>
+        {rows.map((row: any, rowIndex: number) => (
+          <div key={rowIndex} onClick={() => onRowClick?.(row, rowIndex)}>
+            {columns.map((column: any) => (
+              <div key={column.id}>{column.renderCell(row, rowIndex)}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  };
+});
+
 describe('QueryEditor App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -64,18 +82,17 @@ describe('QueryEditor App', () => {
 
   it('has an editor textarea', async () => {
     render(<App />);
-    const textarea = screen.getByPlaceholderText(/Enter your KQL query/);
-    expect(textarea).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search across traces/)).toBeInTheDocument();
   });
 
-  it('sends runQuery when Run is clicked with text', async () => {
+  it('sends runQuery with generated union KQL in search mode', async () => {
     render(<App />);
     await waitFor(() => {
       expect(screen.getByText('Run')).toBeInTheDocument();
     });
 
-    const textarea = screen.getByPlaceholderText(/Enter your KQL query/);
-    fireEvent.change(textarea, { target: { value: 'requests | take 10' } });
+    const searchInput = screen.getByPlaceholderText(/Search across traces/);
+    fireEvent.change(searchInput, { target: { value: 'project' } });
 
     const runBtn = screen.getByText('Run');
     fireEvent.click(runBtn);
@@ -83,17 +100,24 @@ describe('QueryEditor App', () => {
     expect(mockPostMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         command: 'runQuery',
-        kql: 'requests | take 10',
+        kql: expect.stringContaining('union isfuzzy=true'),
         timeRange: { range: '24h' }
+      })
+    );
+    expect(mockPostMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kql: expect.stringContaining('| where * has "project"')
       })
     );
   });
 
-  it('sends saveQuery when Save is clicked', async () => {
+  it('sends saveQuery when Save is clicked in kql mode', async () => {
     render(<App />);
     await waitFor(() => {
       expect(screen.getByText('Save')).toBeInTheDocument();
     });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'KQL mode' }));
 
     const textarea = screen.getByPlaceholderText(/Enter your KQL query/);
     fireEvent.change(textarea, { target: { value: 'exceptions | take 5' } });
@@ -142,8 +166,10 @@ describe('QueryEditor App', () => {
   it('inserts sample query when sample button is clicked', async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText('requests')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'KQL mode' })).toBeInTheDocument();
     });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'KQL mode' }));
 
     const sampleBtn = screen.getByText('requests');
     fireEvent.click(sampleBtn);
@@ -175,6 +201,18 @@ describe('QueryEditor App', () => {
     await waitFor(() => {
       const textarea = screen.getByPlaceholderText(/Enter your KQL query/) as HTMLTextAreaElement;
       expect(textarea.value).toBe('traces | take 100');
+    });
+  });
+
+  it('shows generated KQL preview in search mode', async () => {
+    render(<App />);
+
+    const searchInput = screen.getByPlaceholderText(/Search across traces/);
+    fireEvent.change(searchInput, { target: { value: 'project' } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/union isfuzzy=true/)).toBeInTheDocument();
+      expect(screen.getByText(/where \* has "project"/)).toBeInTheDocument();
     });
   });
 });

@@ -10,11 +10,15 @@ Add and manage Application Insights connections using Microsoft Entra ID or an A
 ### KQL Querying
 Open a query editor, write Kusto Query Language queries, and run them against the active connection. Save useful queries and run them again from the Saved Queries view.
 
+![Search View](https://raw.githubusercontent.com/jakubkozera/vsc-application-insights/master/docs/search.jpg)
+
 ### Log Table Browsing
 Browse available log tables and inspect query results in a dedicated table view. Filter columns, search values, and work with result sets directly inside VS Code.
 
 ### Failures Investigation
 Open a focused failures view to inspect exceptions and failed operations in a more efficient workflow than the Azure portal.
+
+![Failures View](https://raw.githubusercontent.com/jakubkozera/vsc-application-insights/master/docs/failures.jpg)
 
 ## Getting Started
 

@@ -116,6 +116,12 @@
   font-weight: 600;
 }
 
+.valueActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .valueAction {
   border: none;
   background: none;

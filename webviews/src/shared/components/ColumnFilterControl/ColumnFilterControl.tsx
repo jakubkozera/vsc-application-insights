@@ -50,6 +50,10 @@ export const ColumnFilterControl: React.FC<ColumnFilterControlProps> = ({
     onChange({ op: filter?.op ?? defaultOp, value: filter?.value ?? '', selectedValues: undefined });
   };
 
+  const deselectAllValues = () => {
+    onChange({ op: filter?.op ?? defaultOp, value: filter?.value ?? '', selectedValues: [] });
+  };
+
   return (
     <>
       <button
@@ -101,7 +105,10 @@ export const ColumnFilterControl: React.FC<ColumnFilterControlProps> = ({
             <div className={styles.valueSection}>
               <div className={styles.valueSectionHeader}>
                 <span className={styles.valueSectionTitle}>Values</span>
-                <button className={styles.valueAction} onClick={selectAllValues}>Select all</button>
+                <div className={styles.valueActions}>
+                  <button className={styles.valueAction} onClick={selectAllValues}>Select all</button>
+                  <button className={styles.valueAction} onClick={deselectAllValues}>Deselect all</button>
+                </div>
               </div>
               <input
                 className={styles.valueSearchInput}

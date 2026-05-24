@@ -4,9 +4,14 @@
   "description": "Browse Azure Application Insights and Log Analytics data directly inside VS Code — without switching to Azure Portal.",
   "version": "0.1.0",
   "publisher": "jakubkozera",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/jakubkozera/vsc-application-insights.git"
+  },
+  "homepage": "https://github.com/jakubkozera/vsc-application-insights#readme",
+  "bugs": {
+    "url": "https://github.com/jakubkozera/vsc-application-insights/issues"
   },
   "engines": {
     "vscode": "^1.90.0"
@@ -16,10 +21,7 @@
     "Azure"
   ],
   "main": "./dist/extension.js",
-  "icon": "media/icon.png",
-  "activationEvents": [
-    "onView:appInsightsExplorer.connectionsView"
-  ],
+  "icon": "logo.png",
   "contributes": {
     "viewsContainers": {
       "activitybar": [

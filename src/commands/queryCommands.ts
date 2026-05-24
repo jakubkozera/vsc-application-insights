@@ -10,7 +10,14 @@ import { TimeRangeValue } from '../models/connection';
 import { Logger } from '../logging/logger';
 
 const openPanels = new Map<string, WebviewHost>();
-const DEFAULT_TIME_RANGE: TimeRangeValue = { range: '24h' };
+const DEFAULT_TIME_RANGE: TimeRangeValue = { range: '6h' };
+
+function webviewIconPath(context: vscode.ExtensionContext, iconName: string): { light: vscode.Uri; dark: vscode.Uri } {
+  return {
+    light: vscode.Uri.joinPath(context.extensionUri, 'media', `${iconName}-light.svg`),
+    dark: vscode.Uri.joinPath(context.extensionUri, 'media', `${iconName}-dark.svg`),
+  };
+}
 
 function handleColumnSettingsMessages(msg: any, host: WebviewHost, columnStore: ColumnSettingsStore): boolean {
   if (msg.command === 'getColumnPresets') {
@@ -57,6 +64,7 @@ export function registerQueryCommands(
         viewType: 'appInsightsExplorer.logTable',
         title: `${item.label} - ${connection.displayName}`,
         bundleId: 'logTable',
+        iconPath: webviewIconPath(context, 'log-table'),
         initData: {
           connectionId: item.connectionId,
           tableName: item.tableName,
@@ -116,6 +124,7 @@ export function registerQueryCommands(
         viewType: 'appInsightsExplorer.failures',
         title: `Failures - ${connection.displayName}`,
         bundleId: 'failures',
+        iconPath: webviewIconPath(context, 'failures'),
         initData: {
           connectionId: connection.id,
           connectionName: connection.displayName
@@ -160,6 +169,7 @@ export function registerQueryCommands(
         viewType: 'appInsightsExplorer.queryEditor',
         title: `Search - ${connection.displayName}`,
         bundleId: 'queryEditor',
+        iconPath: webviewIconPath(context, 'search'),
         initData: {
           connectionId: connection.id,
           connectionName: connection.displayName,
@@ -217,6 +227,7 @@ export function registerQueryCommands(
             viewType: 'appInsightsExplorer.queryResults',
             title: 'Query Results',
             bundleId: 'queryResults',
+            iconPath: webviewIconPath(context, 'query-results'),
             initData: { result }
           });
           host.onMessage(async (msg: any) => {
@@ -274,6 +285,7 @@ export function registerQueryCommands(
         viewType: 'appInsightsExplorer.queryEditor',
         title: `${query.name} - ${connection.displayName}`,
         bundleId: 'queryEditor',
+        iconPath: webviewIconPath(context, 'search'),
         initData: {
           connectionId,
           connectionName: connection.displayName,

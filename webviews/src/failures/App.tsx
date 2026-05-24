@@ -82,7 +82,7 @@ const TABS: Array<{ id: FailuresTab; label: string; rowLabel: string }> = [
   { id: 'roles', label: 'Roles', rowLabel: 'role' },
 ];
 
-const DEFAULT_TIME_RANGE = '24h';
+const DEFAULT_TIME_RANGE = '6h';
 
 export const App: React.FC = () => {
   const { postMessage, subscribe } = useVSCodeMessaging<any, any>();

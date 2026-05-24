@@ -30,7 +30,7 @@ const TIME_RANGES = [
   { label: 'Last 7 days', value: '7d' },
 ];
 
-const DEFAULT_TIME_RANGE = '24h';
+const DEFAULT_TIME_RANGE = '6h';
 
 const GROUP_BY_OPTIONS = [
   { label: 'No grouping', value: '' },

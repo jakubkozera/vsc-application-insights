@@ -382,9 +382,9 @@ function buildWhereClause(timeRange: TimeRangeValue, selection?: FailuresSelecti
       if (timeRange.from && timeRange.to) {
         return `timestamp between (datetime('${escapeKqlString(timeRange.from)}') .. datetime('${escapeKqlString(timeRange.to)}'))`;
       }
-      return 'timestamp > ago(24h)';
+      return 'timestamp > ago(6h)';
     default:
-      return 'timestamp > ago(24h)';
+      return 'timestamp > ago(6h)';
   }
 }
 
@@ -395,8 +395,8 @@ function getBucketSize(timeRange: TimeRangeValue): string {
     case '6h': return '5m';
     case '24h': return '15m';
     case '7d': return '1h';
-    case 'custom': return '15m';
-    default: return '15m';
+    case 'custom': return '5m';
+    default: return '5m';
   }
 }
 

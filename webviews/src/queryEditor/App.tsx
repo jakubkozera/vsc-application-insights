@@ -39,7 +39,7 @@ const TIME_RANGES = [
   { label: 'Last 7 days', value: '7d' },
 ];
 
-const DEFAULT_TIME_RANGE = '24h';
+const DEFAULT_TIME_RANGE = '6h';
 
 const SEARCH_TABLES = [
   'availabilityResults',
@@ -65,10 +65,10 @@ const KQL_FUNCTIONS = new Set([
 const KQL_TABLES = new Set([...SEARCH_TABLES, 'customEvents']);
 
 const SAMPLE_QUERIES: Record<string, string> = {
-  requests: 'requests\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, name, resultCode, duration, url',
-  exceptions: 'exceptions\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, type, outerMessage, innermostMessage',
-  traces: 'traces\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, message, severityLevel',
-  dependencies: 'dependencies\n| where timestamp > ago(24h)\n| order by timestamp desc\n| project timestamp, name, type, target, duration, success',
+  requests: 'requests\n| where timestamp > ago(6h)\n| order by timestamp desc\n| project timestamp, name, resultCode, duration, url',
+  exceptions: 'exceptions\n| where timestamp > ago(6h)\n| order by timestamp desc\n| project timestamp, type, outerMessage, innermostMessage',
+  traces: 'traces\n| where timestamp > ago(6h)\n| order by timestamp desc\n| project timestamp, message, severityLevel',
+  dependencies: 'dependencies\n| where timestamp > ago(6h)\n| order by timestamp desc\n| project timestamp, name, type, target, duration, success',
 };
 
 export const App: React.FC = () => {
@@ -407,7 +407,7 @@ function getTimeRangeMilliseconds(timeRange: string): number {
     case '6h': return 6 * 60 * 60 * 1000;
     case '24h': return 24 * 60 * 60 * 1000;
     case '7d': return 7 * 24 * 60 * 60 * 1000;
-    default: return 24 * 60 * 60 * 1000;
+    default: return 6 * 60 * 60 * 1000;
   }
 }
 

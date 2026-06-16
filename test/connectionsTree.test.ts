@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ConnectionsTreeProvider } from '../src/providers/connectionsTreeProvider';
-import { ConnectionItem, FailuresItem, LogTablesFolderItem, LogTableItem, SearchItem } from '../src/providers/treeItems';
+import { ConnectionItem, FailuresItem, AvailabilityItem, LogTablesFolderItem, LogTableItem, SearchItem } from '../src/providers/treeItems';
 
 function createMockStore(connections: any[] = []) {
   const _onDidChange = { event: vi.fn(), fire: vi.fn() };
@@ -46,10 +46,11 @@ describe('ConnectionsTreeProvider', () => {
 
     const root = await tree.getChildren();
     const connectionChildren = await tree.getChildren(root[0]);
-    expect(connectionChildren).toHaveLength(3);
+    expect(connectionChildren).toHaveLength(4);
     expect(connectionChildren[0]).toBeInstanceOf(SearchItem);
     expect(connectionChildren[1]).toBeInstanceOf(FailuresItem);
-    expect(connectionChildren[2]).toBeInstanceOf(LogTablesFolderItem);
+    expect(connectionChildren[2]).toBeInstanceOf(AvailabilityItem);
+    expect(connectionChildren[3]).toBeInstanceOf(LogTablesFolderItem);
   });
 
   it('returns 5 log table items under the folder', async () => {

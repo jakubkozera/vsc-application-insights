@@ -1,0 +1,633 @@
+.container {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  overflow: hidden;
+}
+
+/* ── Topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  gap: 12px;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Overview row: chart + summary ── */
+.overviewRow {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  min-height: 240px;
+}
+
+/* ── Chart panel ── */
+.chartPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 8px;
+  min-width: 0;
+  border-right: 1px solid var(--vscode-panel-border);
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.chartTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chartLoadingBadge {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+.clearSelection {
+  font-size: 11px;
+  color: var(--vscode-textLink-foreground);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+}
+
+.clearSelection:hover {
+  text-decoration: underline;
+}
+
+.chartArea {
+  flex: 1;
+  min-height: 180px;
+}
+
+.chartEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── Summary panel ── */
+.summaryPanel {
+  width: 240px;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summaryCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.summaryCard {
+  padding: 10px 14px;
+  border: 1px solid var(--vscode-panel-border);
+  background: color-mix(in srgb, var(--vscode-sideBar-background) 60%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summaryCardSubtitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summaryRowClickable {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: 0 -4px;
+  transition: background 0.15s;
+}
+
+.summaryRowClickable:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.summaryRowActive {
+  background: color-mix(in srgb, #f44336 15%, transparent);
+}
+
+.summaryLabel {
+  font-size: 12px;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.summaryBar2 {
+  flex: 1;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--vscode-input-background);
+  overflow: hidden;
+}
+
+.summaryBarFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.fillSuccess {
+  background: #4caf50;
+}
+
+.fillFailed {
+  background: #f44336;
+}
+
+.summaryCount {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: right;
+}
+
+/* ── Content / tests table ── */
+.content {
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--vscode-foreground);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.failedDrillTitle {
+  color: #f44336;
+}
+
+.closeDrillDown {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--vscode-textLink-foreground);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.closeDrillDown:hover {
+  text-decoration: underline;
+}
+
+.sectionHint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── Table ── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vscode-descriptionForeground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+  vertical-align: middle;
+}
+
+.tableRow {
+  cursor: pointer;
+}
+
+.tableRow:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.tableRowSelected {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+
+.tableRowSelected:hover {
+  background: var(--vscode-list-activeSelectionBackground);
+}
+
+/* ── Status cell ── */
+.testNameCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusGreen  { background: #4caf50; }
+.statusYellow { background: #ff9800; }
+.statusRed    { background: #f44336; }
+.statusGray   {
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+/* ── Availability pct ── */
+.availBadge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.availHigh { color: #4caf50; }
+.availMid  { color: #ff9800; }
+.availLow  { color: #f44336; }
+.availNone { color: var(--vscode-descriptionForeground); }
+
+/* ── Tooltip ── */
+.tooltip {
+  background: var(--vscode-editorHoverWidget-background);
+  border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-panel-border));
+  padding: 8px 12px;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.tooltipTime {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.tooltipPct {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tooltipDetail {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+/* ── Empty / error states ── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  gap: 10px;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.emptyText {
+  font-size: 12px;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+.errorBanner {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, #f44336 15%, transparent);
+  border: 1px solid color-mix(in srgb, #f44336 40%, transparent);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--vscode-errorForeground, #f44336);
+}
+
+
+/* ── Topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  gap: 12px;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Summary bar ── */
+.summaryBar {
+  display: flex;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  flex-wrap: wrap;
+}
+
+.summaryCard {
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid var(--vscode-panel-border);
+  background: color-mix(in srgb, var(--vscode-sideBar-background) 60%, transparent);
+}
+
+.summaryCardTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 8px;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.summaryBar2 {
+  flex: 1;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--vscode-input-background);
+  overflow: hidden;
+}
+
+.summaryBarFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.fillSuccess {
+  background: #4caf50;
+}
+
+.fillFailed {
+  background: #f44336;
+}
+
+.summaryCount {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: right;
+}
+
+/* ── Content area ── */
+.content {
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--vscode-foreground);
+}
+
+/* ── Table ── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vscode-descriptionForeground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+/* ── Status cell ── */
+.testNameCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.statusGreen {
+  background: #4caf50;
+  color: #fff;
+}
+
+.statusYellow {
+  background: #ff9800;
+  color: #fff;
+}
+
+.statusRed {
+  background: #f44336;
+  color: #fff;
+}
+
+.statusGray {
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── Availability pct ── */
+.availBadge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.availHigh {
+  color: #4caf50;
+}
+
+.availMid {
+  color: #ff9800;
+}
+
+.availLow {
+  color: #f44336;
+}
+
+.availNone {
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── Empty / error states ── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  gap: 10px;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.emptyText {
+  font-size: 12px;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+.errorBanner {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, #f44336 15%, transparent);
+  border: 1px solid color-mix(in srgb, #f44336 40%, transparent);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--vscode-errorForeground, #f44336);
+}

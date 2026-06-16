@@ -68,6 +68,20 @@ export class FailuresItem extends vscode.TreeItem {
   }
 }
 
+export class AvailabilityItem extends vscode.TreeItem {
+  constructor(public readonly connectionId: string) {
+    super('Availability', vscode.TreeItemCollapsibleState.None);
+    this.contextValue = 'availability';
+    this.id = `conn:${connectionId}:availability`;
+    this.iconPath = new vscode.ThemeIcon('pulse');
+    this.command = {
+      command: 'appInsightsExplorer.openAvailability',
+      title: 'Open Availability',
+      arguments: [this]
+    };
+  }
+}
+
 export class LogTableItem extends vscode.TreeItem {
   constructor(
     public readonly connectionId: string,

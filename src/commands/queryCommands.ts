@@ -4,8 +4,9 @@ import { QueryStore } from '../state/queryStore';
 import { ColumnSettingsStore } from '../state/columnSettingsStore';
 import { QueryService } from '../services/queryService';
 import { FailuresViewService, type FailuresTab, type FailuresSelection } from '../services/failuresViewService';
+import { AvailabilityService } from '../services/availabilityService';
 import { WebviewHost } from '../webviews/webviewHost';
-import { ConnectionItem, FailuresItem, LogTableItem, SavedQueryItem, SearchItem } from '../providers/treeItems';
+import { AvailabilityItem, ConnectionItem, FailuresItem, LogTableItem, SavedQueryItem, SearchItem } from '../providers/treeItems';
 import { TimeRangeValue } from '../models/connection';
 import { Logger } from '../logging/logger';
 
@@ -47,6 +48,7 @@ export function registerQueryCommands(
   columnStore: ColumnSettingsStore
 ): void {
   const failuresViewService = new FailuresViewService(queryService);
+  const availabilityService = new AvailabilityService(queryService);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('appInsightsExplorer.openTable', async (item: LogTableItem) => {
@@ -267,6 +269,58 @@ export function registerQueryCommands(
       );
       if (confirm !== 'Delete') return;
       await queryStore.remove(item.queryId);
+    }),
+
+    vscode.commands.registerCommand('appInsightsExplorer.openAvailability', async (item?: ConnectionItem | AvailabilityItem) => {
+      const connectionId = item instanceof ConnectionItem
+        ? item.meta.id
+        : item instanceof AvailabilityItem
+          ? item.connectionId
+          : store.getActiveId();
+
+      if (!connectionId) {
+        vscode.window.showWarningMessage('No active connection. Add a connection first.');
+        return;
+      }
+
+      const connection = store.get(connectionId);
+      if (!connection) {
+        vscode.window.showWarningMessage('Connection not found.');
+        return;
+      }
+
+      const panelKey = `availability:${connection.id}`;
+      const existing = openPanels.get(panelKey);
+      if (existing) {
+        existing.reveal();
+        return;
+      }
+
+      const host = new WebviewHost(context, {
+        viewType: 'appInsightsExplorer.availability',
+        title: `Availability - ${connection.displayName}`,
+        bundleId: 'availability',
+        iconPath: webviewIconPath(context, 'availability'),
+        initData: {
+          connectionId: connection.id,
+          connectionName: connection.displayName
+        }
+      });
+
+      openPanels.set(panelKey, host);
+      host.onDispose(() => openPanels.delete(panelKey));
+
+      host.onMessage(async (msg: any) => {
+        if (msg.command !== 'loadAvailability') return;
+        try {
+          const timeRange: TimeRangeValue = msg.timeRange ?? { range: '24h' };
+          const data = await availabilityService.load(connection.id, timeRange, msg.selectedTestName ?? undefined);
+          host.post({ command: 'availabilityData', data });
+        } catch (e: any) {
+          Logger.error('Availability view query failed', e.message);
+          host.post({ command: 'availabilityError', error: e.message });
+        }
+      });
     }),
 
     vscode.commands.registerCommand('appInsightsExplorer.runSavedQuery', async (item: SavedQueryItem) => {

@@ -2,7 +2,7 @@
   "name": "azure-application-insights-explorer",
   "displayName": "Azure App Insights Explorer",
   "description": "Browse Azure Application Insights and Log Analytics data directly inside VS Code — without switching to Azure Portal.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "jakubkozera",
   "license": "MIT",
   "repository": {
@@ -100,6 +100,12 @@
         "icon": "$(graph)"
       },
       {
+        "command": "appInsightsExplorer.openAvailability",
+        "title": "Open Availability",
+        "category": "App Insights",
+        "icon": "$(pulse)"
+      },
+      {
         "command": "appInsightsExplorer.runQuery",
         "title": "Run Query",
         "category": "App Insights",
@@ -140,6 +146,7 @@
         { "command": "appInsightsExplorer.editConnection", "when": "false" },
         { "command": "appInsightsExplorer.openTable", "when": "false" },
         { "command": "appInsightsExplorer.openFailures", "when": "false" },
+        { "command": "appInsightsExplorer.openAvailability", "when": "false" },
         { "command": "appInsightsExplorer.deleteQuery", "when": "false" },
         { "command": "appInsightsExplorer.runSavedQuery", "when": "false" },
         { "command": "appInsightsExplorer.setActiveConnection", "when": "false" }

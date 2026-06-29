@@ -5,6 +5,7 @@ import { QueryStore } from './state/queryStore';
 import { ColumnSettingsStore } from './state/columnSettingsStore';
 import { ClientFactory } from './services/clientFactory';
 import { QueryService } from './services/queryService';
+import { AvailabilityHealthMonitor } from './services/availabilityHealthMonitor';
 import { ConnectionsTreeProvider } from './providers/connectionsTreeProvider';
 import { SavedQueriesTreeProvider } from './providers/savedQueriesTreeProvider';
 import { setExtensionUri } from './providers/treeItems';
@@ -24,9 +25,10 @@ export function activate(context: vscode.ExtensionContext): void {
   const factory = new ClientFactory(connectionStore);
   factoryRef = factory;
   const queryService = new QueryService(connectionStore, factory);
+  const availabilityMonitor = new AvailabilityHealthMonitor(connectionStore, queryService);
 
   // Tree views
-  const connectionsTree = new ConnectionsTreeProvider(connectionStore);
+  const connectionsTree = new ConnectionsTreeProvider(connectionStore, availabilityMonitor);
   const savedQueriesTree = new SavedQueriesTreeProvider(queryStore);
 
   const connectionsView = vscode.window.createTreeView('appInsightsExplorer.connectionsView', {
@@ -34,6 +36,44 @@ export function activate(context: vscode.ExtensionContext): void {
     showCollapseAll: true
   });
   context.subscriptions.push(connectionsView);
+
+  const updateConnectionsBadge = () => {
+    const failingCount = availabilityMonitor.getTotalFailingCount();
+    connectionsView.badge = failingCount > 0
+      ? {
+        value: failingCount,
+        tooltip: `${failingCount} failing availability health check${failingCount === 1 ? '' : 's'}`
+      }
+      : undefined;
+  };
+
+  availabilityMonitor.onDidChange(updateConnectionsBadge);
+
+  const updateHealthMonitor = () => {
+    const enabled = vscode.workspace.getConfiguration('appInsightsExplorer').get<boolean>('availabilityHealthChecks.enabled', true);
+    if (enabled) {
+      availabilityMonitor.start();
+    } else {
+      availabilityMonitor.stop();
+    }
+    updateConnectionsBadge();
+  };
+
+  connectionStore.onDidChange(() => {
+    const enabled = vscode.workspace.getConfiguration('appInsightsExplorer').get<boolean>('availabilityHealthChecks.enabled', true);
+    if (enabled) {
+      void availabilityMonitor.refreshNow();
+    }
+  });
+
+  context.subscriptions.push(
+    availabilityMonitor,
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('appInsightsExplorer.availabilityHealthChecks')) {
+        updateHealthMonitor();
+      }
+    })
+  );
 
   const savedQueriesView = vscode.window.createTreeView('appInsightsExplorer.savedQueriesView', {
     treeDataProvider: savedQueriesTree
@@ -56,6 +96,8 @@ export function activate(context: vscode.ExtensionContext): void {
   connectionStore.onDidChange(updateStatusBar);
   updateStatusBar();
   context.subscriptions.push(statusBar);
+
+  updateHealthMonitor();
 
   // Commands
   registerConnectionCommands(context, connectionStore, factory, connectionsTree);

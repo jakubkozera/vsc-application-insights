@@ -53,6 +53,29 @@ describe('ConnectionsTreeProvider', () => {
     expect(connectionChildren[3]).toBeInstanceOf(LogTablesFolderItem);
   });
 
+  it('highlights failing availability items', async () => {
+    const connections = [
+      { id: 'c1', displayName: 'Prod', resourceId: 'app-1', resourceType: 'appInsights', authMode: 'aad', createdAt: '2024-01-01' },
+    ];
+    const store = createMockStore(connections);
+    const healthMonitor = {
+      getState: vi.fn(() => ({
+        hasHealthChecks: true,
+        failingCount: 3,
+        checkedAt: '2026-06-29T12:00:00Z'
+      })),
+      onDidChange: vi.fn(() => ({ dispose: vi.fn() })),
+    };
+    const tree = new ConnectionsTreeProvider(store as any, healthMonitor as any);
+
+    const root = await tree.getChildren();
+    const connectionChildren = await tree.getChildren(root[0]);
+    const availability = connectionChildren[2] as AvailabilityItem;
+
+    expect(availability.description).toBe('3 failing');
+    expect((availability.iconPath as any).color?.id).toBe('testing.iconFailed');
+  });
+
   it('returns 5 log table items under the folder', async () => {
     const connections = [
       { id: 'c1', displayName: 'Prod', resourceId: 'app-1', resourceType: 'appInsights', authMode: 'aad', createdAt: '2024-01-01' },

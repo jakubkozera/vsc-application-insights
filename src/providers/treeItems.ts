@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ConnectionStore } from '../state/connectionStore';
 import { ConnectionMetadata, LogTable } from '../models/connection';
+import { AvailabilityHealthState } from '../services/availabilityHealthMonitor';
 
 let _extensionUri: vscode.Uri;
 
@@ -69,11 +70,19 @@ export class FailuresItem extends vscode.TreeItem {
 }
 
 export class AvailabilityItem extends vscode.TreeItem {
-  constructor(public readonly connectionId: string) {
+  constructor(public readonly connectionId: string, healthState?: AvailabilityHealthState) {
     super('Availability', vscode.TreeItemCollapsibleState.None);
     this.contextValue = 'availability';
     this.id = `conn:${connectionId}:availability`;
-    this.iconPath = new vscode.ThemeIcon('pulse');
+    if (healthState?.hasHealthChecks && healthState.failingCount > 0) {
+      this.description = `${healthState.failingCount} failing`;
+      this.iconPath = new vscode.ThemeIcon('pulse', new vscode.ThemeColor('testing.iconFailed'));
+      this.tooltip = new vscode.MarkdownString(
+        `**Availability**\n\n${healthState.failingCount} failing health check${healthState.failingCount === 1 ? '' : 's'}.`
+      );
+    } else {
+      this.iconPath = new vscode.ThemeIcon('pulse');
+    }
     this.command = {
       command: 'appInsightsExplorer.openAvailability',
       title: 'Open Availability',

@@ -2,7 +2,7 @@
   "name": "azure-application-insights-explorer",
   "displayName": "Azure App Insights Explorer",
   "description": "Browse Azure Application Insights and Log Analytics data directly inside VS Code — without switching to Azure Portal.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "jakubkozera",
   "license": "MIT",
   "repository": {
@@ -22,7 +22,20 @@
   ],
   "main": "./dist/extension.js",
   "icon": "logo.png",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
+    "configuration": {
+      "title": "App Insights Explorer",
+      "properties": {
+        "appInsightsExplorer.availabilityHealthChecks.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Automatically check Application Insights availability tests on activation and every 15 minutes. When failures are found, show a badge in App Insights Explorer and highlight the Availability item."
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {

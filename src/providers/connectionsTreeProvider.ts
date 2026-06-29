@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ConnectionStore } from '../state/connectionStore';
 import { LogTable } from '../models/connection';
+import { AvailabilityHealthMonitor } from '../services/availabilityHealthMonitor';
 import {
   AvailabilityItem,
   ConnectionItem,
@@ -23,8 +24,12 @@ export class ConnectionsTreeProvider implements vscode.TreeDataProvider<vscode.T
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(private store: ConnectionStore) {
+  constructor(
+    private store: ConnectionStore,
+    private readonly healthMonitor?: AvailabilityHealthMonitor
+  ) {
     store.onDidChange(() => this.refresh());
+    healthMonitor?.onDidChange(() => this.refresh());
   }
 
   refresh(): void {
@@ -47,7 +52,7 @@ export class ConnectionsTreeProvider implements vscode.TreeDataProvider<vscode.T
       return [
         new SearchItem(element.meta.id),
         new FailuresItem(element.meta.id),
-        new AvailabilityItem(element.meta.id),
+        new AvailabilityItem(element.meta.id, this.healthMonitor?.getState(element.meta.id)),
         new LogTablesFolderItem(element.meta.id)
       ];
     }

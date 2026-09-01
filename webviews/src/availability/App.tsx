@@ -9,7 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { IconRefresh } from '@tabler/icons-react';
-import { Button, Dropdown, LoadingOverlay } from '@shared/components';
+import { Button, Dropdown, LoadingOverlay, TableExportControl } from '@shared/components';
 import { useVSCodeMessaging } from '@shared/hooks';
 import styles from './Availability.module.css';
 
@@ -52,7 +52,8 @@ type IncomingMessage =
 
 type OutgoingMessage =
   | { command: 'webviewReady' }
-  | { command: 'loadAvailability'; timeRange: { range: string }; selectedTestName?: string };
+  | { command: 'loadAvailability'; timeRange: { range: string }; selectedTestName?: string }
+  | { command: 'exportData'; format: 'csv' | 'excel'; rows: Record<string, unknown>[]; columns: Array<{ key: string; label: string }>; fileName: string };
 
 const TIME_RANGES = [
   { label: 'Last 30 min', value: '30m' },
@@ -320,25 +321,40 @@ export function App() {
 
           return (
             <div className={styles.tableWrapper}>
-              <div className={styles.sectionTitle}>
-                {failedDrillDown ? (
-                  <>
-                    <span className={styles.failedDrillTitle}>Failed tests</span>
-                    <span className={styles.sectionHint}> — {rows.length} test{rows.length !== 1 ? 's' : ''} with failures</span>
-                    <button
-                      className={styles.closeDrillDown}
-                      onClick={() => setFailedDrillDown(false)}
-                      title="Close"
-                    >
-                      ✕ Close
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Select availability test
-                    <span className={styles.sectionHint}> — click a row to drill into its timeline</span>
-                  </>
-                )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className={styles.sectionTitle}>
+                  {failedDrillDown ? (
+                    <>
+                      <span className={styles.failedDrillTitle}>Failed tests</span>
+                      <span className={styles.sectionHint}> — {rows.length} test{rows.length !== 1 ? 's' : ''} with failures</span>
+                      <button
+                        className={styles.closeDrillDown}
+                        onClick={() => setFailedDrillDown(false)}
+                        title="Close"
+                      >
+                        ✕ Close
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Select availability test
+                      <span className={styles.sectionHint}> — click a row to drill into its timeline</span>
+                    </>
+                  )}
+                </div>
+                <TableExportControl
+                  rows={rows}
+                  columns={[
+                    { key: 'testName', label: 'Availability Test' },
+                    { key: 'availability20m', label: 'Last 20 Min (%)' },
+                    { key: 'availabilityPct', label: 'Availability (%)' },
+                    { key: 'failedCount', label: 'Failed' },
+                    { key: 'totalCount', label: 'Total' },
+                    { key: 'avgDurationMs', label: 'Average Duration (ms)' },
+                    { key: 'lastTimestamp', label: 'Last Run' },
+                  ]}
+                  fileName={failedDrillDown ? 'availability-failed-tests' : 'availability-tests'}
+                />
               </div>
               <table className={styles.table}>
                 <thead>

@@ -9,3 +9,4 @@ export { LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
 export { RowDetailPanel } from './RowDetailPanel/RowDetailPanel';
 export { VirtualizedTable } from './VirtualizedTable/VirtualizedTable';
 export type { VirtualizedTableColumn } from './VirtualizedTable/VirtualizedTable';
+export { TableExportControl } from './TableExportControl/TableExportControl';

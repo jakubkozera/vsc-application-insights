@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 import { IconRefresh } from '@tabler/icons-react';
-import { Button, Dropdown, LoadingOverlay, VirtualizedTable } from '@shared/components';
+import { Button, Dropdown, LoadingOverlay, TableExportControl, VirtualizedTable } from '@shared/components';
 import { useVSCodeMessaging } from '@shared/hooks';
 import styles from './Failures.module.css';
 
@@ -287,7 +287,25 @@ export const App: React.FC = () => {
           </div>
 
           <div className={styles.tableHeader}>
-            <div className={styles.sectionTitle}>Select {activeTabMeta.rowLabel}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className={styles.sectionTitle}>Select {activeTabMeta.rowLabel}</div>
+              <TableExportControl
+                rows={filteredRows.map(row => ({
+                  key: row.key,
+                  label: row.label,
+                  failedCount: row.failedCount,
+                  totalCount: row.totalCount,
+                  failureRate: row.failureRate,
+                }))}
+                columns={[
+                  { key: 'label', label: 'Name' },
+                  { key: 'failedCount', label: 'Count (failed)' },
+                  { key: 'totalCount', label: 'Count' },
+                  { key: 'failureRate', label: 'Failure rate' },
+                ]}
+                fileName={`${activeTab}-failures`}
+              />
+            </div>
             <input
               className={styles.searchInput}
               placeholder="Search to filter items..."

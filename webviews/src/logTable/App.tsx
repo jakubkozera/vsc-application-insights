@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useVSCodeMessaging, useColumnSettings } from '@shared/hooks';
-import { Button, ColumnFilterControl, ColumnSettingsPanel, Dropdown, LoadingOverlay, RowDetailPanel, VirtualizedTable } from '@shared/components';
+import { Button, ColumnFilterControl, ColumnSettingsPanel, Dropdown, LoadingOverlay, RowDetailPanel, TableExportControl, VirtualizedTable } from '@shared/components';
 import { IconRefresh, IconSettings, IconList } from '@tabler/icons-react';
 import { applyColumnFilters, ColumnFilter, formatFilterValue, getColumnFilterType } from '@shared/utils/columnFiltering';
 import styles from './LogTable.module.css';
@@ -223,7 +223,14 @@ export const App: React.FC = () => {
       <LoadingOverlay visible={loading} message="Running query..." />
 
       <div className={styles.toolbar}>
-        <h2 className={styles.title}>{initData?.tableName ?? 'Loading...'}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 className={styles.title}>{initData?.tableName ?? 'Loading...'}</h2>
+          <TableExportControl
+            rows={columnFilteredRows}
+            columns={visibleColumns.map(col => ({ key: col.name, label: col.name }))}
+            fileName={`${initData?.tableName ?? 'table'}-results`}
+          />
+        </div>
         <div className={styles.toolbarRight}>
           <input
             className={styles.filterInput}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useVSCodeMessaging, useColumnSettings } from '@shared/hooks';
-import { Button, ColumnFilterControl, ColumnSettingsPanel, RowDetailPanel, VirtualizedTable } from '@shared/components';
+import { Button, ColumnFilterControl, ColumnSettingsPanel, RowDetailPanel, TableExportControl, VirtualizedTable } from '@shared/components';
 import { IconSettings } from '@tabler/icons-react';
 import { applyColumnFilters, ColumnFilter, formatFilterValue, getColumnFilterType } from '@shared/utils/columnFiltering';
 import styles from './QueryResults.module.css';
@@ -111,9 +111,16 @@ export const App: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.toolbar}>
-        <span className={styles.stats}>
-          {result.statistics?.rowCount} rows • {result.statistics?.executionTime}ms
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className={styles.stats}>
+            {result.statistics?.rowCount} rows • {result.statistics?.executionTime}ms
+          </span>
+          <TableExportControl
+            rows={filteredRows}
+            columns={visibleColumns.map(col => ({ key: col.name, label: col.name }))}
+            fileName="query-results"
+          />
+        </div>
         <div className={styles.toolbarRight}>
           <input
             className={styles.filterInput}

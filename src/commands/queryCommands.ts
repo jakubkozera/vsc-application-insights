@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { ConnectionStore } from '../state/connectionStore';
 import { QueryStore } from '../state/queryStore';
 import { ColumnSettingsStore } from '../state/columnSettingsStore';
@@ -40,6 +43,95 @@ function handleColumnSettingsMessages(msg: any, host: WebviewHost, columnStore: 
   return false;
 }
 
+interface ExportColumn {
+  key: string;
+  label: string;
+}
+
+async function handleExportDataMessage(msg: any): Promise<void> {
+  if (msg.command !== 'exportData') return;
+
+  try {
+    const rows = Array.isArray(msg.rows) ? msg.rows as Record<string, unknown>[] : [];
+    const columns = Array.isArray(msg.columns) ? msg.columns as ExportColumn[] : [];
+    const format = msg.format === 'excel' ? 'excel' : 'csv';
+    const extension = format === 'excel' ? 'xls' : 'csv';
+    const content = serializeRowsForExport(rows, columns, format);
+    const downloadsDir = vscode.env.remoteName
+      ? path.join(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd(), 'Downloads')
+      : path.join(os.homedir(), 'Downloads');
+    const fileName = sanitizeExportFileName(msg.fileName);
+    await fs.promises.mkdir(downloadsDir, { recursive: true });
+    const fullPath = path.join(downloadsDir, `${fileName}.${extension}`);
+    await fs.promises.writeFile(fullPath, content, 'utf8');
+
+    const openFile = 'Open file';
+    const revealInFolder = 'Reveal in Folder';
+    const choice = await vscode.window.showInformationMessage(`Exported ${path.basename(fullPath)}`, openFile, revealInFolder);
+
+    if (choice === openFile) {
+      await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(fullPath));
+    } else if (choice === revealInFolder) {
+      await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(fullPath));
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    Logger.error('Data export failed', message);
+    vscode.window.showErrorMessage(`Could not export data: ${message}`);
+  }
+}
+
+function sanitizeExportFileName(value: unknown): string {
+  if (typeof value !== 'string' || !value.trim()) return 'export';
+  const sanitized = path.basename(value.trim()).replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').replace(/\.+$/g, '');
+  return sanitized || 'export';
+}
+
+export function serializeRowsForExport(
+  rows: Record<string, unknown>[],
+  columns: ExportColumn[],
+  format: 'csv' | 'excel'
+): string {
+  if (format === 'excel') {
+    const cells = (values: unknown[]) => values
+      .map(value => `        <Cell><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`)
+      .join('\n');
+    return [
+      '<?xml version="1.0"?>',
+      '<?mso-application progid="Excel.Sheet"?>',
+      '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">',
+      '  <Worksheet ss:Name="Sheet1">',
+      '    <Table>',
+      '      <Row>',
+      cells(columns.map(column => column.label || column.key)),
+      '      </Row>',
+      ...rows.flatMap(row => ['      <Row>', cells(columns.map(column => row[column.key])), '      </Row>']),
+      '    </Table>',
+      '  </Worksheet>',
+      '</Workbook>',
+    ].join('\n');
+  }
+
+  const header = columns.map(column => escapeCsvCell(column.label || column.key)).join(',');
+  const body = rows.map(row => columns.map(column => escapeCsvCell(row[column.key])).join(',')).join('\n');
+  return [header, body].filter(Boolean).join('\n');
+}
+
+function escapeCsvCell(value: unknown): string {
+  const normalized = value === null || value === undefined ? '' : String(value);
+  const escaped = normalized.replace(/"/g, '""');
+  return /[",\n\r]/.test(normalized) ? `"${escaped}"` : escaped;
+}
+
+function escapeXml(value: unknown): string {
+  return (value === null || value === undefined ? '' : String(value))
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export function registerQueryCommands(
   context: vscode.ExtensionContext,
   store: ConnectionStore,
@@ -79,6 +171,10 @@ export function registerQueryCommands(
 
       host.onMessage(async (msg: any) => {
         if (handleColumnSettingsMessages(msg, host, columnStore)) return;
+        if (msg.command === 'exportData') {
+          await handleExportDataMessage(msg);
+          return;
+        }
         if (msg.command === 'query') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
@@ -137,6 +233,10 @@ export function registerQueryCommands(
       host.onDispose(() => openPanels.delete(panelKey));
 
       host.onMessage(async (msg: any) => {
+        if (msg.command === 'exportData') {
+          await handleExportDataMessage(msg);
+          return;
+        }
         if (msg.command !== 'loadFailures') return;
         try {
           const data = await failuresViewService.load(connection.id, {
@@ -185,6 +285,10 @@ export function registerQueryCommands(
 
       host.onMessage(async (msg: any) => {
         if (handleColumnSettingsMessages(msg, host, columnStore)) return;
+        if (msg.command === 'exportData') {
+          await handleExportDataMessage(msg);
+          return;
+        }
         if (msg.command === 'runQuery') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
@@ -233,6 +337,10 @@ export function registerQueryCommands(
             initData: { result }
           });
           host.onMessage(async (msg: any) => {
+            if (msg.command === 'exportData') {
+              await handleExportDataMessage(msg);
+              return;
+            }
             handleColumnSettingsMessages(msg, host, columnStore);
           });
         } catch (e: any) {
@@ -311,6 +419,10 @@ export function registerQueryCommands(
       host.onDispose(() => openPanels.delete(panelKey));
 
       host.onMessage(async (msg: any) => {
+        if (msg.command === 'exportData') {
+          await handleExportDataMessage(msg);
+          return;
+        }
         if (msg.command !== 'loadAvailability') return;
         try {
           const timeRange: TimeRangeValue = msg.timeRange ?? { range: '24h' };
@@ -349,6 +461,11 @@ export function registerQueryCommands(
       });
 
       host.onMessage(async (msg: any) => {
+        if (msg.command === 'exportData') {
+          await handleExportDataMessage(msg);
+          return;
+        }
+        if (handleColumnSettingsMessages(msg, host, columnStore)) return;
         if (msg.command === 'runQuery') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;

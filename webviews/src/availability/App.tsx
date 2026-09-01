@@ -16,6 +16,7 @@ import styles from './Availability.module.css';
 interface InitData {
   connectionId: string;
   connectionName: string;
+  initialTimeRange?: { range: string };
 }
 
 interface AvailabilityTestResult {
@@ -60,6 +61,7 @@ const TIME_RANGES = [
   { label: 'Last 1 hour', value: '1h' },
   { label: 'Last 6 hours', value: '6h' },
   { label: 'Last 24 hours', value: '24h' },
+  { label: 'Last 3 days', value: '3d' },
   { label: 'Last 7 days', value: '7d' },
 ];
 
@@ -149,7 +151,9 @@ export function App() {
     const unsub = subscribe((msg) => {
       if (msg.command === 'init') {
         setInitData(msg.data);
-        load('24h');
+        const initialRange = msg.data.initialTimeRange?.range ?? '24h';
+        setTimeRange(initialRange);
+        load(initialRange);
       } else if (msg.command === 'availabilityData') {
         setData(msg.data);
         setLoading(false);

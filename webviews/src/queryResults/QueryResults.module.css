@@ -179,6 +179,15 @@
   background: var(--vscode-list-hoverBackground);
 }
 
+.tr.exception {
+  background: color-mix(in srgb, var(--vscode-errorForeground) 16%, transparent);
+  box-shadow: inset 3px 0 var(--vscode-errorForeground);
+}
+
+.tr.exception:hover {
+  background: color-mix(in srgb, var(--vscode-errorForeground) 24%, transparent);
+}
+
 .tr.selected {
   background: var(--vscode-list-activeSelectionBackground);
   color: var(--vscode-list-activeSelectionForeground);

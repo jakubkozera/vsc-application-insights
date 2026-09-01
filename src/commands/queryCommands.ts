@@ -5,6 +5,7 @@ import * as path from 'path';
 import { ConnectionStore } from '../state/connectionStore';
 import { QueryStore } from '../state/queryStore';
 import { ColumnSettingsStore } from '../state/columnSettingsStore';
+import { ViewPreferencesStore } from '../state/viewPreferencesStore';
 import { QueryService } from '../services/queryService';
 import { FailuresViewService, type FailuresTab, type FailuresSelection } from '../services/failuresViewService';
 import { AvailabilityService } from '../services/availabilityService';
@@ -23,21 +24,25 @@ function webviewIconPath(context: vscode.ExtensionContext, iconName: string): { 
   };
 }
 
-function handleColumnSettingsMessages(msg: any, host: WebviewHost, columnStore: ColumnSettingsStore): boolean {
+function handleColumnSettingsMessages(msg: any, host: WebviewHost, columnStore: ColumnSettingsStore, viewKey: string): boolean {
   if (msg.command === 'getColumnPresets') {
-    host.post({ command: 'columnPresets', presets: columnStore.listPresets() });
+    host.post({ command: 'columnPresets', presets: columnStore.listPresets(), lastPresetId: columnStore.getLastPresetId(viewKey) });
     return true;
   }
   if (msg.command === 'saveColumnPreset') {
     columnStore.savePreset(msg.name, msg.columns).then(preset => {
-      host.post({ command: 'columnPresets', presets: columnStore.listPresets() });
+      host.post({ command: 'columnPresets', presets: columnStore.listPresets(), lastPresetId: columnStore.getLastPresetId(viewKey) });
     });
     return true;
   }
   if (msg.command === 'deleteColumnPreset') {
     columnStore.deletePreset(msg.id).then(() => {
-      host.post({ command: 'columnPresets', presets: columnStore.listPresets() });
+      host.post({ command: 'columnPresets', presets: columnStore.listPresets(), lastPresetId: columnStore.getLastPresetId(viewKey) });
     });
+    return true;
+  }
+  if (msg.command === 'setActiveColumnPreset') {
+    void columnStore.setLastPresetId(viewKey, msg.id);
     return true;
   }
   return false;
@@ -137,7 +142,8 @@ export function registerQueryCommands(
   store: ConnectionStore,
   queryStore: QueryStore,
   queryService: QueryService,
-  columnStore: ColumnSettingsStore
+  columnStore: ColumnSettingsStore,
+  viewPreferencesStore: ViewPreferencesStore
 ): void {
   const failuresViewService = new FailuresViewService(queryService);
   const availabilityService = new AvailabilityService(queryService);
@@ -162,7 +168,8 @@ export function registerQueryCommands(
         initData: {
           connectionId: item.connectionId,
           tableName: item.tableName,
-          connectionName: connection.displayName
+          connectionName: connection.displayName,
+          initialTimeRange: viewPreferencesStore.getLastTimeRange('logTable') ?? DEFAULT_TIME_RANGE
         }
       });
 
@@ -170,7 +177,7 @@ export function registerQueryCommands(
       host.onDispose(() => openPanels.delete(panelKey));
 
       host.onMessage(async (msg: any) => {
-        if (handleColumnSettingsMessages(msg, host, columnStore)) return;
+        if (handleColumnSettingsMessages(msg, host, columnStore, 'logTable')) return;
         if (msg.command === 'exportData') {
           await handleExportDataMessage(msg);
           return;
@@ -178,6 +185,7 @@ export function registerQueryCommands(
         if (msg.command === 'query') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
+            await viewPreferencesStore.setLastTimeRange('logTable', timeRange);
             const result = await queryService.runTableQuery(
               item.connectionId,
               item.tableName,
@@ -225,7 +233,8 @@ export function registerQueryCommands(
         iconPath: webviewIconPath(context, 'failures'),
         initData: {
           connectionId: connection.id,
-          connectionName: connection.displayName
+          connectionName: connection.displayName,
+          initialTimeRange: viewPreferencesStore.getLastTimeRange('failures') ?? DEFAULT_TIME_RANGE
         }
       });
 
@@ -239,9 +248,11 @@ export function registerQueryCommands(
         }
         if (msg.command !== 'loadFailures') return;
         try {
+          const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
+          await viewPreferencesStore.setLastTimeRange('failures', timeRange);
           const data = await failuresViewService.load(connection.id, {
             tab: (msg.tab ?? 'operations') as FailuresTab,
-            timeRange: msg.timeRange ?? DEFAULT_TIME_RANGE,
+            timeRange,
             selection: msg.selection as FailuresSelection | undefined,
             selectedKey: msg.selectedKey,
           });
@@ -276,7 +287,8 @@ export function registerQueryCommands(
           connectionId: connection.id,
           connectionName: connection.displayName,
           connections: store.list().map(c => ({ id: c.id, name: c.displayName })),
-          initialMode: 'search'
+          initialMode: 'search',
+          initialTimeRange: viewPreferencesStore.getLastTimeRange('queryEditor') ?? DEFAULT_TIME_RANGE
         }
       });
 
@@ -284,7 +296,7 @@ export function registerQueryCommands(
       host.onDispose(() => openPanels.delete(panelKey));
 
       host.onMessage(async (msg: any) => {
-        if (handleColumnSettingsMessages(msg, host, columnStore)) return;
+        if (handleColumnSettingsMessages(msg, host, columnStore, 'queryEditor')) return;
         if (msg.command === 'exportData') {
           await handleExportDataMessage(msg);
           return;
@@ -292,6 +304,7 @@ export function registerQueryCommands(
         if (msg.command === 'runQuery') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
+            await viewPreferencesStore.setLastTimeRange('queryEditor', timeRange);
             const result = await queryService.runQuery(
               msg.connectionId ?? connection.id,
               msg.kql,
@@ -341,7 +354,7 @@ export function registerQueryCommands(
               await handleExportDataMessage(msg);
               return;
             }
-            handleColumnSettingsMessages(msg, host, columnStore);
+            handleColumnSettingsMessages(msg, host, columnStore, 'queryResults');
           });
         } catch (e: any) {
           vscode.window.showErrorMessage(`Query failed: ${e.message}`);
@@ -411,7 +424,8 @@ export function registerQueryCommands(
         iconPath: webviewIconPath(context, 'availability'),
         initData: {
           connectionId: connection.id,
-          connectionName: connection.displayName
+          connectionName: connection.displayName,
+          initialTimeRange: viewPreferencesStore.getLastTimeRange('availability') ?? { range: '24h' }
         }
       });
 
@@ -426,6 +440,7 @@ export function registerQueryCommands(
         if (msg.command !== 'loadAvailability') return;
         try {
           const timeRange: TimeRangeValue = msg.timeRange ?? { range: '24h' };
+          await viewPreferencesStore.setLastTimeRange('availability', timeRange);
           const data = await availabilityService.load(connection.id, timeRange, msg.selectedTestName ?? undefined);
           host.post({ command: 'availabilityData', data });
         } catch (e: any) {
@@ -456,7 +471,8 @@ export function registerQueryCommands(
           connectionId,
           connectionName: connection.displayName,
           connections: store.list().map(c => ({ id: c.id, name: c.displayName })),
-          initialQuery: query.kql
+          initialQuery: query.kql,
+          initialTimeRange: viewPreferencesStore.getLastTimeRange('queryEditor') ?? DEFAULT_TIME_RANGE
         }
       });
 
@@ -465,10 +481,11 @@ export function registerQueryCommands(
           await handleExportDataMessage(msg);
           return;
         }
-        if (handleColumnSettingsMessages(msg, host, columnStore)) return;
+        if (handleColumnSettingsMessages(msg, host, columnStore, 'queryEditor')) return;
         if (msg.command === 'runQuery') {
           try {
             const timeRange: TimeRangeValue = msg.timeRange ?? DEFAULT_TIME_RANGE;
+            await viewPreferencesStore.setLastTimeRange('queryEditor', timeRange);
             const result = await queryService.runQuery(
               msg.connectionId ?? connectionId,
               msg.kql,

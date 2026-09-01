@@ -39,7 +39,7 @@ export interface QueryStatistics {
   rowCount: number;
 }
 
-export type TimeRange = '30m' | '1h' | '6h' | '24h' | '7d' | 'custom';
+export type TimeRange = '30m' | '1h' | '6h' | '24h' | '3d' | '7d' | 'custom';
 
 export interface TimeRangeValue {
   range: TimeRange;

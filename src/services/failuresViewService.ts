@@ -377,6 +377,7 @@ function buildWhereClause(timeRange: TimeRangeValue, selection?: FailuresSelecti
     case '1h': return 'timestamp > ago(1h)';
     case '6h': return 'timestamp > ago(6h)';
     case '24h': return 'timestamp > ago(24h)';
+    case '3d': return 'timestamp > ago(3d)';
     case '7d': return 'timestamp > ago(7d)';
     case 'custom':
       if (timeRange.from && timeRange.to) {
@@ -394,6 +395,7 @@ function getBucketSize(timeRange: TimeRangeValue): string {
     case '1h': return '2m';
     case '6h': return '5m';
     case '24h': return '15m';
+    case '3d': return '30m';
     case '7d': return '1h';
     case 'custom': return '5m';
     default: return '5m';

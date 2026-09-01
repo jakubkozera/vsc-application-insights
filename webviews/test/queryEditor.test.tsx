@@ -310,4 +310,44 @@ describe('QueryEditor App', () => {
       expect(highlight).toHaveTextContent('where timestamp > ago(24h)');
     });
   });
+
+  it('offers a "Last 3 days" time range option', async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Last 3 days')).toBeInTheDocument();
+    });
+  });
+
+  it('applies the initial time range sent from the extension host', async () => {
+    mockSubscribe.mockImplementation((handler: any) => {
+      setTimeout(() => {
+        handler({
+          command: 'init',
+          data: {
+            connectionId: 'c1',
+            connectionName: 'Prod',
+            connections: [{ id: 'c1', name: 'Prod' }],
+            initialTimeRange: { range: '3d' }
+          }
+        });
+      }, 0);
+      return () => {};
+    });
+
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Run')).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(/Search across traces/);
+    fireEvent.change(searchInput, { target: { value: 'project' } });
+    fireEvent.click(screen.getByText('Run'));
+
+    expect(mockPostMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        command: 'runQuery',
+        timeRange: { range: '3d' }
+      })
+    );
+  });
 });

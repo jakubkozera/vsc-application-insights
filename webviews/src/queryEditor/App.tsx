@@ -27,6 +27,7 @@ interface InitData {
   connections: ConnectionOption[];
   initialQuery?: string;
   initialMode?: QueryMode;
+  initialTimeRange?: { range: string };
 }
 
 type QueryMode = 'search' | 'kql';
@@ -36,6 +37,7 @@ const TIME_RANGES = [
   { label: 'Last 1 hour', value: '1h' },
   { label: 'Last 6 hours', value: '6h' },
   { label: 'Last 24 hours', value: '24h' },
+  { label: 'Last 3 days', value: '3d' },
   { label: 'Last 7 days', value: '7d' },
 ];
 
@@ -118,6 +120,9 @@ export const App: React.FC = () => {
         if (data.initialQuery) {
           setQueryMode('kql');
           setKql(data.initialQuery);
+        }
+        if (data.initialTimeRange) {
+          setTimeRange(data.initialTimeRange.range);
         }
       } else if (msg.command === 'queryResult') {
         setResult(msg.data as QueryResult);
@@ -360,7 +365,7 @@ export const App: React.FC = () => {
             columns={tableColumns}
             wrapperClassName={styles.tableWrapper}
             rowKey={(_, idx) => idx}
-            rowClassName={(row) => `${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
+            rowClassName={(row) => `${styles.tr} ${String(row.itemType).toLowerCase() === 'exception' ? styles.exception : ''} ${selectedRow === row ? styles.selected : ''}`}
             onRowClick={(row) => setSelectedRow(selectedRow === row ? null : row)}
             emptyState={<div className={styles.stats}>No matching rows</div>}
             ariaLabel="Query results"
@@ -413,6 +418,7 @@ function getTimeRangeMilliseconds(timeRange: string): number {
     case '1h': return 60 * 60 * 1000;
     case '6h': return 6 * 60 * 60 * 1000;
     case '24h': return 24 * 60 * 60 * 1000;
+    case '3d': return 3 * 24 * 60 * 60 * 1000;
     case '7d': return 7 * 24 * 60 * 60 * 1000;
     default: return 6 * 60 * 60 * 1000;
   }

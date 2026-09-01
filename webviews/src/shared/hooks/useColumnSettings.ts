@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ColumnConfig, ColumnPreset } from '@shared/components';
 
 interface Column {
@@ -44,6 +44,8 @@ export function useColumnSettings({ allColumns, allRows = [], postMessage, subsc
   const [columnConfig, setColumnConfig] = useState<ColumnConfig[]>([]);
   const [presets, setPresets] = useState<ColumnPreset[]>([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [lastPresetId, setLastPresetId] = useState<string | undefined>(undefined);
+  const appliedLastPresetRef = useRef(false);
 
   // Initialize column config when allColumns change
   useEffect(() => {
@@ -76,6 +78,7 @@ export function useColumnSettings({ allColumns, allRows = [], postMessage, subsc
     const unsub = subscribe((msg: any) => {
       if (msg.command === 'columnPresets') {
         setPresets(msg.presets ?? []);
+        if (msg.lastPresetId) setLastPresetId(msg.lastPresetId);
       }
     });
     return unsub;
@@ -116,7 +119,18 @@ export function useColumnSettings({ allColumns, allRows = [], postMessage, subsc
     }
     setColumnConfig(ordered);
     setShowSettings(false);
-  }, [allColumns, columnConfig]);
+    postMessage({ command: 'setActiveColumnPreset', id: preset.id });
+  }, [allColumns, columnConfig, postMessage]);
+
+  // Auto-apply the last preset selected in this view, once columns and presets are ready
+  useEffect(() => {
+    if (appliedLastPresetRef.current) return;
+    if (!lastPresetId || columnConfig.length === 0 || presets.length === 0) return;
+    const preset = presets.find(p => p.id === lastPresetId);
+    if (!preset) return;
+    appliedLastPresetRef.current = true;
+    handleLoadPreset(preset);
+  }, [lastPresetId, columnConfig, presets, handleLoadPreset]);
 
   const handleDeletePreset = useCallback((id: string) => {
     postMessage({ command: 'deleteColumnPreset', id });

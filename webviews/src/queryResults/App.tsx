@@ -139,7 +139,7 @@ export const App: React.FC = () => {
         columns={tableColumns}
         wrapperClassName={styles.tableWrapper}
         rowKey={(_, idx) => idx}
-        rowClassName={(row) => `${styles.tr} ${selectedRow === row ? styles.selected : ''}`}
+        rowClassName={(row) => `${styles.tr} ${String(row.itemType).toLowerCase() === 'exception' ? styles.exception : ''} ${selectedRow === row ? styles.selected : ''}`}
         onRowClick={(row) => setSelectedRow(selectedRow === row ? null : row)}
         emptyState={<div className={styles.empty}>No matching rows</div>}
         ariaLabel="Saved query results"

@@ -169,6 +169,7 @@ export class QueryService {
       case '1h': return 'PT1H';
       case '6h': return 'PT6H';
       case '24h': return 'P1D';
+      case '3d': return 'P3D';
       case '7d': return 'P7D';
       case 'custom': return 'P1D';
       default: return 'PT1H';

@@ -20,6 +20,7 @@ interface InitData {
   connectionId: string;
   tableName: string;
   connectionName: string;
+  initialTimeRange?: { range: string };
 }
 
 const TIME_RANGES = [
@@ -27,6 +28,7 @@ const TIME_RANGES = [
   { label: 'Last 1 hour', value: '1h' },
   { label: 'Last 6 hours', value: '6h' },
   { label: 'Last 24 hours', value: '24h' },
+  { label: 'Last 3 days', value: '3d' },
   { label: 'Last 7 days', value: '7d' },
 ];
 
@@ -84,7 +86,11 @@ export const App: React.FC = () => {
   useEffect(() => {
     const unsub = subscribe((msg) => {
       if (msg.command === 'init') {
-        setInitData(msg.data as InitData);
+        const data = msg.data as InitData;
+        setInitData(data);
+        if (data.initialTimeRange) {
+          setTimeRange(data.initialTimeRange.range);
+        }
       } else if (msg.command === 'queryResult') {
         setResult(msg.data as QueryResult);
         setLoading(false);

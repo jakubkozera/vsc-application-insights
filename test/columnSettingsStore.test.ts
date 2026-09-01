@@ -80,4 +80,38 @@ describe('ColumnSettingsStore', () => {
     await store.deletePreset(store.listPresets()[0].id);
     expect(handler).toHaveBeenCalledTimes(2);
   });
+
+  it('has no last preset for a view by default', () => {
+    expect(store.getLastPresetId('queryEditor')).toBeUndefined();
+  });
+
+  it('remembers the last selected preset per view', async () => {
+    const preset = await store.savePreset('Compact View', ['timestamp', 'name']);
+    await store.setLastPresetId('queryEditor', preset.id);
+
+    expect(store.getLastPresetId('queryEditor')).toBe(preset.id);
+    expect(store.getLastPresetId('logTable')).toBeUndefined();
+  });
+
+  it('tracks last preset independently per view', async () => {
+    const presetA = await store.savePreset('A', ['col1']);
+    const presetB = await store.savePreset('B', ['col2']);
+
+    await store.setLastPresetId('queryEditor', presetA.id);
+    await store.setLastPresetId('logTable', presetB.id);
+
+    expect(store.getLastPresetId('queryEditor')).toBe(presetA.id);
+    expect(store.getLastPresetId('logTable')).toBe(presetB.id);
+  });
+
+  it('clears last-preset references when the referenced preset is deleted', async () => {
+    const preset = await store.savePreset('ToDelete', ['col1']);
+    await store.setLastPresetId('queryEditor', preset.id);
+    await store.setLastPresetId('logTable', preset.id);
+
+    await store.deletePreset(preset.id);
+
+    expect(store.getLastPresetId('queryEditor')).toBeUndefined();
+    expect(store.getLastPresetId('logTable')).toBeUndefined();
+  });
 });

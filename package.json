@@ -2,7 +2,7 @@
   "name": "azure-application-insights-explorer",
   "displayName": "Azure App Insights Explorer",
   "description": "Browse Azure Application Insights and Log Analytics data directly inside VS Code — without switching to Azure Portal.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "jakubkozera",
   "license": "MIT",
   "repository": {

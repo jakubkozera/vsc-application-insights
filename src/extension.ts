@@ -3,6 +3,7 @@ import { Logger } from './logging/logger';
 import { ConnectionStore } from './state/connectionStore';
 import { QueryStore } from './state/queryStore';
 import { ColumnSettingsStore } from './state/columnSettingsStore';
+import { ViewPreferencesStore } from './state/viewPreferencesStore';
 import { ClientFactory } from './services/clientFactory';
 import { QueryService } from './services/queryService';
 import { AvailabilityHealthMonitor } from './services/availabilityHealthMonitor';
@@ -22,6 +23,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const connectionStore = new ConnectionStore(context);
   const queryStore = new QueryStore(context);
   const columnSettingsStore = new ColumnSettingsStore(context);
+  const viewPreferencesStore = new ViewPreferencesStore(context);
   const factory = new ClientFactory(connectionStore);
   factoryRef = factory;
   const queryService = new QueryService(connectionStore, factory);
@@ -101,7 +103,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Commands
   registerConnectionCommands(context, connectionStore, factory, connectionsTree);
-  registerQueryCommands(context, connectionStore, queryStore, queryService, columnSettingsStore);
+  registerQueryCommands(context, connectionStore, queryStore, queryService, columnSettingsStore, viewPreferencesStore);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('appInsightsExplorer.focus', () => {

@@ -13,6 +13,8 @@ export interface ColumnPreset {
 
 export interface ColumnSettingsData {
   presets: ColumnPreset[];
+  /** Id of the preset last selected in each view (keyed by view identifier). */
+  lastPresetIdByView?: Record<string, string>;
 }
 
 export class ColumnSettingsStore {
@@ -23,6 +25,16 @@ export class ColumnSettingsStore {
 
   private getData(): ColumnSettingsData {
     return this.ctx.globalState.get<ColumnSettingsData>(STATE_KEY, { presets: [] });
+  }
+
+  getLastPresetId(viewKey: string): string | undefined {
+    return this.getData().lastPresetIdByView?.[viewKey];
+  }
+
+  async setLastPresetId(viewKey: string, id: string): Promise<void> {
+    const data = this.getData();
+    data.lastPresetIdByView = { ...(data.lastPresetIdByView ?? {}), [viewKey]: id };
+    await this.setData(data);
   }
 
   private async setData(data: ColumnSettingsData): Promise<void> {
@@ -60,6 +72,11 @@ export class ColumnSettingsStore {
   async deletePreset(id: string): Promise<void> {
     const data = this.getData();
     data.presets = data.presets.filter(p => p.id !== id);
+    if (data.lastPresetIdByView) {
+      for (const key of Object.keys(data.lastPresetIdByView)) {
+        if (data.lastPresetIdByView[key] === id) delete data.lastPresetIdByView[key];
+      }
+    }
     await this.setData(data);
   }
 

@@ -2,7 +2,7 @@
   "name": "azure-application-insights-explorer",
   "displayName": "Azure App Insights Explorer",
   "description": "Browse Azure Application Insights and Log Analytics data directly inside VS Code — without switching to Azure Portal.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publisher": "jakubkozera",
   "license": "MIT",
   "repository": {
@@ -155,14 +155,38 @@
     ],
     "menus": {
       "commandPalette": [
-        { "command": "appInsightsExplorer.removeConnection", "when": "false" },
-        { "command": "appInsightsExplorer.editConnection", "when": "false" },
-        { "command": "appInsightsExplorer.openTable", "when": "false" },
-        { "command": "appInsightsExplorer.openFailures", "when": "false" },
-        { "command": "appInsightsExplorer.openAvailability", "when": "false" },
-        { "command": "appInsightsExplorer.deleteQuery", "when": "false" },
-        { "command": "appInsightsExplorer.runSavedQuery", "when": "false" },
-        { "command": "appInsightsExplorer.setActiveConnection", "when": "false" }
+        {
+          "command": "appInsightsExplorer.removeConnection",
+          "when": "false"
+        },
+        {
+          "command": "appInsightsExplorer.editConnection",
+          "when": "false"
+        },
+        {
+          "command": "appInsightsExplorer.openTable",
+          "when": "false"
+        },
+        {
+          "command": "appInsightsExplorer.openFailures",
+          "when": "false"
+        },
+        {
+          "command": "appInsightsExplorer.openAvailability",
+          "when": "false"
+        },
+        {
+          "command": "appInsightsExplorer.deleteQuery",
+          "when": "false"
+        },
+        {
+          "command": "appInsightsExplorer.runSavedQuery",
+          "when": "false"
+        },
+        {
+          "command": "appInsightsExplorer.setActiveConnection",
+          "when": "false"
+        }
       ],
       "view/title": [
         {
@@ -216,8 +240,14 @@
     "languages": [
       {
         "id": "kql",
-        "aliases": ["KQL", "Kusto Query Language"],
-        "extensions": [".kql", ".kusto"],
+        "aliases": [
+          "KQL",
+          "Kusto Query Language"
+        ],
+        "extensions": [
+          ".kql",
+          ".kusto"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],

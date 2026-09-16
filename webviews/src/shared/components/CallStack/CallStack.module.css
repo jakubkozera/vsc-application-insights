@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   overflow: auto;
-  font-family: var(--vscode-editor-font-family);
+  font-family: 'JetBrains Mono', var(--vscode-editor-font-family, monospace);
   font-size: 12px;
 }
 

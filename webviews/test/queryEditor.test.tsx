@@ -111,12 +111,37 @@ describe('QueryEditor App', () => {
       expect.objectContaining({
         command: 'runQuery',
         kql: expect.stringContaining('union isfuzzy=true'),
-        timeRange: { range: '24h' }
+        timeRange: { range: '6h' }
       })
     );
     expect(mockPostMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         kql: expect.stringContaining('| where * has "project"')
+      })
+    );
+  });
+
+  it('uses a custom date range in the generated search query', async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Run')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getAllByRole('combobox')[1], { target: { value: 'custom' } });
+    fireEvent.change(screen.getByLabelText('Custom range start'), { target: { value: '2026-09-10T08:30' } });
+    fireEvent.change(screen.getByLabelText('Custom range end'), { target: { value: '2026-09-12T17:45' } });
+    fireEvent.change(screen.getByPlaceholderText(/Search across traces/), { target: { value: 'project' } });
+    fireEvent.click(screen.getByText('Run'));
+
+    expect(mockPostMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        command: 'runQuery',
+        kql: expect.stringContaining(`datetime("${new Date('2026-09-10T08:30').toISOString()}")`),
+        timeRange: {
+          range: 'custom',
+          from: new Date('2026-09-10T08:30').toISOString(),
+          to: new Date('2026-09-12T17:45').toISOString()
+        }
       })
     );
   });
@@ -264,7 +289,7 @@ describe('QueryEditor App', () => {
 
     const textarea = screen.getByPlaceholderText(/Enter your KQL query/) as HTMLTextAreaElement;
     expect(textarea.value).toContain('requests');
-    expect(textarea.value).toContain('ago(24h)');
+    expect(textarea.value).toContain('ago(6h)');
     expect(textarea.value).toContain('order by timestamp desc');
     expect(textarea.value).not.toContain('top 50');
   });

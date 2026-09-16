@@ -25,8 +25,8 @@
 .resizeHandle {
   position: absolute;
   top: 0;
-  right: -4px;
-  width: 8px;
+  right: -5px;
+  width: 10px;
   height: 100%;
   cursor: col-resize;
   z-index: 4;
@@ -35,11 +35,15 @@
 .resizeHandle::after {
   content: '';
   position: absolute;
-  top: 20%;
-  bottom: 20%;
-  left: 50%;
-  width: 1px;
-  background: color-mix(in srgb, var(--vscode-panel-border) 70%, transparent);
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  background: var(--vscode-panel-border);
+}
+
+.resizeHandle:hover::after {
+  background: var(--vscode-focusBorder);
 }
 
 .body {
@@ -55,6 +59,7 @@
 
 .cell {
   min-width: 0;
+  font-family: 'JetBrains Mono', var(--vscode-editor-font-family, monospace);
 }
 
 .clickable {

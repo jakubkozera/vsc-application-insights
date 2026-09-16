@@ -19,6 +19,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .toolbarRight {
@@ -36,24 +37,60 @@
 
 .modeTabs {
   display: flex;
-  gap: 8px;
-  padding: 8px 16px 0;
+  align-items: end;
+  gap: 0;
+  height: 35px;
+  padding: 0 12px;
+  background: var(--vscode-tab-inactiveBackground, var(--vscode-sideBar-background));
+  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 .modeTab {
-  border: 1px solid var(--vscode-panel-border);
-  background: color-mix(in srgb, var(--vscode-sideBar-background) 68%, transparent);
-  color: var(--vscode-foreground);
-  padding: 6px 10px;
-  border-radius: 999px;
+  height: 35px;
+  border: 0;
+  border-top: 1px solid transparent;
+  background: transparent;
+  color: var(--vscode-tab-inactiveForeground, var(--vscode-foreground));
+  padding: 0 12px;
   cursor: pointer;
   font-size: 12px;
 }
 
+.modeTab:hover {
+  background: var(--vscode-tab-hoverBackground, var(--vscode-list-hoverBackground));
+}
+
 .modeTabActive {
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-background);
+  background: var(--vscode-tab-activeBackground, var(--vscode-editor-background));
+  color: var(--vscode-tab-activeForeground, var(--vscode-foreground));
+  border-top-color: var(--vscode-tab-activeBorderTop, var(--vscode-focusBorder));
+}
+
+.customRange {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dateTimeInput {
+  width: 180px;
+  height: 26px;
+  padding: 2px 6px;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 2px;
+  outline: none;
+  font-size: 12px;
+}
+
+.dateTimeInput:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.rangeSeparator {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
 }
 
 .searchSection {
@@ -106,7 +143,7 @@
 
 .kqlEditorShell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 52px;
+  grid-template-columns: 52px minmax(0, 1fr);
   min-height: 180px;
   max-height: 360px;
   border-top: 1px solid var(--vscode-panel-border);
@@ -123,7 +160,7 @@
   margin: 0;
   padding: 12px 16px;
   min-height: 180px;
-  font-family: var(--vscode-editor-font-family, monospace);
+  font-family: 'JetBrains Mono', var(--vscode-editor-font-family, monospace);
   font-size: 13px;
   line-height: 1.5;
   white-space: pre;
@@ -160,7 +197,7 @@
 }
 
 .lineNumbers {
-  border-left: 1px solid var(--vscode-panel-border);
+  border-right: 1px solid var(--vscode-panel-border);
   background: color-mix(in srgb, var(--vscode-sideBar-background) 72%, transparent);
   overflow: hidden;
 }
@@ -175,7 +212,7 @@
   line-height: 19.5px;
   text-align: right;
   color: var(--vscode-editorLineNumber-foreground, var(--vscode-descriptionForeground));
-  font-family: var(--vscode-editor-font-family, monospace);
+  font-family: 'JetBrains Mono', var(--vscode-editor-font-family, monospace);
   font-size: 12px;
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconTableExport } from '@tabler/icons-react';
+import { IconBrandGithubCopilot, IconTableExport } from '@tabler/icons-react';
 import { useVSCodeMessaging } from '@shared/hooks';
 import styles from './TableExportControl.module.css';
 
@@ -41,6 +41,15 @@ export const TableExportControl: React.FC<TableExportControlProps> = ({ rows, co
           </button>
         </div>
       </details>
+      <button
+        type="button"
+        className={styles.button}
+        title="Analyze with GitHub Copilot"
+        onClick={() => postMessage({ command: 'analyzeData', rows, columns, fileName })}
+      >
+        <IconBrandGithubCopilot size={14} stroke={1.5} aria-hidden="true" />
+        <span>Analyze</span>
+      </button>
     </div>
   );
 };

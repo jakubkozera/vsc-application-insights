@@ -1,6 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { CallStack } from '../src/shared/components/CallStack/CallStack';
+
+const { vscodeApi } = vi.hoisted(() => ({ vscodeApi: { postMessage: vi.fn() } }));
+const postMessage = vscodeApi.postMessage;
+vi.mock('../src/shared/hooks/useVSCodeAPI', () => ({ useVSCodeAPI: () => vscodeApi }));
+
+function resolveSources(fileNames: string[], requestId?: string) {
+  const request = postMessage.mock.calls.filter(([message]) => message.command === 'resolveStackSources').at(-1)![0];
+  act(() => {
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { command: 'stackSourcesResolved', requestId: requestId ?? request.requestId, fileNames }
+    }));
+  });
+}
 
 const SAMPLE_DETAILS = JSON.stringify([{
   outerId: '0',
@@ -113,5 +126,52 @@ describe('CallStack', () => {
     render(<CallStack details={details} />);
     expect(screen.getByText('SomeException')).toBeInTheDocument();
     expect(screen.getByText('oops')).toBeInTheDocument();
+  });
+
+  it('requests workspace availability and only shows buttons for resolved files', () => {
+    render(<CallStack details={SAMPLE_DETAILS} />);
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
+      command: 'resolveStackSources',
+      fileNames: ['C:\\Agents\\_work\\107\\s\\src\\Helpers\\RetryHelper.cs', 'C:\\Agents\\_work\\107\\s\\src\\VSTSApi.cs']
+    }));
+    expect(screen.queryByTitle('Open source in workspace')).not.toBeInTheDocument();
+    resolveSources(['C:\\Agents\\_work\\107\\s\\src\\Helpers\\RetryHelper.cs']);
+    expect(screen.getAllByTitle('Open source in workspace')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Open RetryHelper.cs:28 in workspace' }));
+    expect(postMessage).toHaveBeenCalledWith({
+      command: 'openStackSource', fileName: 'C:\\Agents\\_work\\107\\s\\src\\Helpers\\RetryHelper.cs', line: 28
+    });
+  });
+
+  it('ignores unrelated and stale availability responses when details change', () => {
+    const { rerender } = render(<CallStack details={SAMPLE_DETAILS} />);
+    const oldRequestId = postMessage.mock.calls[0][0].requestId;
+    resolveSources(['C:\\Agents\\_work\\107\\s\\src\\Helpers\\RetryHelper.cs'], 'unrelated');
+    expect(screen.queryByTitle('Open source in workspace')).not.toBeInTheDocument();
+    resolveSources(['C:\\Agents\\_work\\107\\s\\src\\Helpers\\RetryHelper.cs']);
+    expect(screen.getByTitle('Open source in workspace')).toBeInTheDocument();
+    rerender(<CallStack details={SAMPLE_DETAILS.replace('404 (Not Found)', '500 (Server Error)')} />);
+    expect(screen.queryByTitle('Open source in workspace')).not.toBeInTheDocument();
+    resolveSources(['C:\\Agents\\_work\\107\\s\\src\\Helpers\\RetryHelper.cs'], oldRequestId);
+    expect(screen.queryByTitle('Open source in workspace')).not.toBeInTheDocument();
+  });
+
+  it('supports Unix filenames and cleans up the listener after unmount', () => {
+    const details = JSON.stringify([{ type: 'Error', message: 'oops', parsedStack: [
+      { assembly: 'App', method: 'App.Run', level: 0, line: 42, fileName: '/build/src/File.cs' }
+    ] }]);
+    const removeListener = vi.spyOn(window, 'removeEventListener');
+    const { unmount } = render(<CallStack details={details} />);
+    expect(screen.getByText('File.cs:42')).toBeInTheDocument();
+    resolveSources(['/build/src/File.cs']);
+    expect(screen.getByRole('button', { name: 'Open File.cs:42 in workspace' })).toBeInTheDocument();
+    unmount();
+    expect(removeListener).toHaveBeenCalledWith('message', expect.any(Function));
+    removeListener.mockRestore();
+  });
+
+  it('does not search for frames without source locations', () => {
+    render(<CallStack details={JSON.stringify([{ type: 'Error', message: 'oops' }])} />);
+    expect(postMessage).not.toHaveBeenCalled();
   });
 });

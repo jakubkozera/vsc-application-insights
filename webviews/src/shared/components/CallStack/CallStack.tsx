@@ -1,6 +1,19 @@
-import React, { useMemo, useState } from 'react';
-import { IconCopy, IconFilter, IconFilterOff } from '@tabler/icons-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { IconCopy, IconExternalLink, IconFilter, IconFilterOff } from '@tabler/icons-react';
+import { useVSCodeMessaging } from '../../hooks/useVSCodeMessaging';
 import styles from './CallStack.module.css';
+
+let nextSourceRequestId = 0;
+
+interface StackSourcesResolved {
+  command: string;
+  requestId?: string;
+  fileNames?: string[];
+}
+
+type StackSourceRequest =
+  | { command: 'resolveStackSources'; requestId: string; fileNames: string[] }
+  | { command: 'openStackSource'; fileName: string; line: number };
 
 interface StackFrame {
   assembly: string;
@@ -48,8 +61,28 @@ function parseDetails(details: string): ExceptionDetail[] {
 
 export const CallStack: React.FC<CallStackProps> = ({ details }) => {
   const [justMyCode, setJustMyCode] = useState(true);
+  const [availableSources, setAvailableSources] = useState<{ details: string; fileNames: string[] } | null>(null);
+  const { postMessage, subscribe } = useVSCodeMessaging<StackSourcesResolved, StackSourceRequest>();
 
   const exceptions = useMemo(() => parseDetails(details), [details]);
+
+  useEffect(() => {
+    setAvailableSources(null);
+    const fileNames = [...new Set(exceptions.flatMap(exception =>
+      (exception.parsedStack ?? [])
+        .filter(frame => typeof frame.fileName === 'string' && frame.line > 0)
+        .map(frame => frame.fileName!)
+    ))];
+    if (!fileNames.length) return;
+    const requestId = `stack-source-${++nextSourceRequestId}`;
+    const unsubscribe = subscribe(message => {
+      if (message.command === 'stackSourcesResolved' && message.requestId === requestId && Array.isArray(message.fileNames)) {
+        setAvailableSources({ details, fileNames: message.fileNames.filter(fileName => fileNames.includes(fileName)) });
+      }
+    });
+    postMessage({ command: 'resolveStackSources', requestId, fileNames });
+    return unsubscribe;
+  }, [details, exceptions, postMessage, subscribe]);
 
   const copyStack = () => {
     const text = exceptions
@@ -121,8 +154,19 @@ export const CallStack: React.FC<CallStackProps> = ({ details }) => {
                 >
                   <span className={styles.frameMethod}>{frame.method}</span>
                   {frame.fileName && frame.line > 0 && (
-                    <span className={styles.frameLocation}>
-                      {frame.fileName.split('\\').pop()}:{frame.line}
+                    <span className={styles.frameLocation} title={frame.fileName}>
+                      <span>{frame.fileName.split(/[\\/]/).pop()}:{frame.line}</span>
+                      {availableSources?.details === details && availableSources.fileNames.includes(frame.fileName) && (
+                        <button
+                          type="button"
+                          className={styles.openSourceBtn}
+                          title="Open source in workspace"
+                          aria-label={`Open ${frame.fileName.split(/[\\/]/).pop()}:${frame.line} in workspace`}
+                          onClick={() => postMessage({ command: 'openStackSource', fileName: frame.fileName!, line: frame.line })}
+                        >
+                          <IconExternalLink size={14} stroke={1.5} />
+                        </button>
+                      )}
                     </span>
                   )}
                 </div>

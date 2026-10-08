@@ -15,6 +15,11 @@ Open a query editor, write Kusto Query Language queries, and run them against th
 ### Log Table Browsing
 Browse available log tables and inspect query results in a dedicated table view. Filter columns, search values, and work with result sets directly inside VS Code.
 
+### Copilot Analysis
+Click **Analyze** next to **Export** to send the current table rows to GitHub Copilot Chat in Agent mode. A CSV is saved silently in a unique system temporary directory and attached to the chat. Events are ordered oldest first using `timestamp` or `TimeGenerated`; the prompt asks Copilot to reconstruct the flow, highlight errors and summarize key findings and next steps.
+
+This requires a VS Code Stable or Insiders version with Copilot Chat and Agent mode available. Analysis includes all fields present in the selected rows, including hidden columns, and shares this telemetry with Copilot under your configured policies. Temporary CSV files remain available for the chat and are not deleted automatically by the extension.
+
 ### Failures Investigation
 Open a focused failures view to inspect exceptions and failed operations in a more efficient workflow than the Azure portal.
 

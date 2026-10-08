@@ -30,6 +30,17 @@ describe('TableExportControl', () => {
     });
   });
 
+  it('sends the current rows to Copilot analysis', () => {
+    postMessage.mockClear();
+    const rows = [{ timestamp: '2026-10-08T10:00:00Z', message: 'Failed request' }];
+    const columns = [{ key: 'message', label: 'Message' }];
+    render(<TableExportControl rows={rows} columns={columns} fileName="requests" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));
+
+    expect(postMessage).toHaveBeenCalledWith({ command: 'analyzeData', rows, columns, fileName: 'requests' });
+  });
+
   it('does not render without data rows', () => {
     const { container } = render(<TableExportControl rows={[]} columns={[]} fileName="empty" />);
 

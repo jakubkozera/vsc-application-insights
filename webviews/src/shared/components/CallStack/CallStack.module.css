@@ -82,6 +82,7 @@
 
 .frame {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
   padding: 2px 4px 2px 12px;
@@ -107,9 +108,38 @@
 }
 
 .frameLocation {
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  word-break: break-all;
   color: var(--vscode-textLink-foreground);
   font-size: 11px;
+}
+
+.openSourceBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+}
+
+.openSourceBtn:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.openSourceBtn:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
 }
 
 .collapsedFrames {

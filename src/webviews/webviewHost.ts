@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Logger } from '../logging/logger';
+import { openStackSource, resolveStackSources } from '../services/stackSourceService';
 
 export interface WebviewInitData {
   [key: string]: unknown;
@@ -47,6 +48,8 @@ export class WebviewHost {
       if (msg?.command === 'webviewReady' && opts.initData) {
         Logger.info(`[WebviewHost] webviewReady received for ${opts.viewType}, sending init`);
         this.post({ command: 'init', data: opts.initData });
+      } else if (msg?.command === 'resolveStackSources' || msg?.command === 'openStackSource') {
+        void this.handleStackSourceMessage(msg);
       } else {
         this._onMessage.fire(msg);
       }
@@ -69,6 +72,25 @@ export class WebviewHost {
 
   dispose(): void {
     this.panel.dispose();
+  }
+
+  private async handleStackSourceMessage(msg: any): Promise<void> {
+    try {
+      if (msg.command === 'resolveStackSources' && typeof msg.requestId === 'string' && Array.isArray(msg.fileNames)) {
+        const fileNames = msg.fileNames.filter((fileName: unknown): fileName is string => typeof fileName === 'string');
+        const sources = await resolveStackSources(fileNames);
+        this.post({ command: 'stackSourcesResolved', requestId: msg.requestId, fileNames: [...sources.keys()] });
+      } else if (msg.command === 'openStackSource' && typeof msg.fileName === 'string' && Number.isSafeInteger(msg.line) && msg.line > 0) {
+        await openStackSource(msg.fileName, msg.line);
+      }
+    } catch (error) {
+      Logger.error(`[WebviewHost] Stack source navigation failed: ${String(error)}`);
+      if (msg.command === 'resolveStackSources') {
+        this.post({ command: 'stackSourcesResolved', requestId: msg.requestId, fileNames: [] });
+      } else {
+        void vscode.window.showWarningMessage('Unable to open the source file in the current workspace.');
+      }
+    }
   }
 
   private buildHtml(): string {

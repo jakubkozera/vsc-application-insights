@@ -71,6 +71,26 @@ describe('QueryEditor App', () => {
     expect(mockPostMessage).toHaveBeenCalledWith({ command: 'webviewReady' });
   });
 
+  it('prefills and automatically runs a search requested by the log analysis tool', async () => {
+    mockSubscribe.mockImplementation((handler: any) => {
+      setTimeout(() => handler({
+        command: 'init',
+        data: {
+          connectionId: 'c2', connectionName: 'Dev', connections: [{ id: 'c2', name: 'Dev' }],
+          initialSearchText: 'operation-123', autoRunSearch: true, initialTimeRange: { range: '24h' },
+        },
+      }), 0);
+      return () => {};
+    });
+    render(<App />);
+    await waitFor(() => expect(screen.getByPlaceholderText(/Search across traces/)).toHaveValue('operation-123'));
+    expect(mockPostMessage.mock.calls.filter(([message]) => message.command === 'runQuery')).toHaveLength(1);
+    expect(mockPostMessage).toHaveBeenCalledWith(expect.objectContaining({
+      command: 'runQuery', connectionId: 'c2', analysisRequest: true, timeRange: { range: '24h' },
+      kql: expect.stringContaining('| where * has "operation-123"'),
+    }));
+  });
+
   it('renders the Run button', async () => {
     render(<App />);
     await waitFor(() => {

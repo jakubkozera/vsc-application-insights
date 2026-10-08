@@ -45,6 +45,8 @@ interface InitData {
   connectionName: string;
   connections: ConnectionOption[];
   initialQuery?: string;
+  initialSearchText?: string;
+  autoRunSearch?: boolean;
   initialMode?: QueryMode;
   initialTimeRange?: TimeRangeValue;
 }
@@ -225,6 +227,22 @@ export const App: React.FC = () => {
           setTimeRange(data.initialTimeRange.range);
           setCustomFrom(toDateTimeLocal(data.initialTimeRange.from));
           setCustomTo(toDateTimeLocal(data.initialTimeRange.to));
+        }
+        if (data.initialSearchText !== undefined) {
+          setQueryMode("search");
+          setSearchText(data.initialSearchText);
+          if (data.autoRunSearch) {
+            const selectedTimeRange = data.initialTimeRange ?? { range: DEFAULT_TIME_RANGE };
+            setLoading(true);
+            setError(null);
+            postMessage({
+              command: "runQuery",
+              connectionId: data.connectionId,
+              timeRange: selectedTimeRange,
+              kql: buildSearchQuery(data.initialSearchText, selectedTimeRange),
+              analysisRequest: true,
+            });
+          }
         }
       } else if (msg.command === "queryResult") {
         setResult(msg.data as QueryResult);

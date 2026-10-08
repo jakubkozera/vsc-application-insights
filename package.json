@@ -2,7 +2,7 @@
   "name": "azure-application-insights-explorer",
   "displayName": "Azure App Insights Explorer",
   "description": "Browse Azure Application Insights and Log Analytics data directly inside VS Code — without switching to Azure Portal.",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "publisher": "jakubkozera",
   "license": "MIT",
   "repository": {
@@ -26,6 +26,28 @@
     "onStartupFinished"
   ],
   "contributes": {
+    "languageModelTools": [
+      {
+        "name": "analyze_logs",
+        "displayName": "Analyze Application Insights Logs",
+        "toolReferenceName": "analyze_logs",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(copilot)",
+        "userDescription": "Search Application Insights telemetry and analyze the matching flow and errors in this chat.",
+        "modelDescription": "Search Azure Application Insights telemetry for a literal search phrase such as an operation ID, correlation ID or error message, open Search with that phrase and its results, and return a chronological CSV for analysis in the current conversation. When multiple connections are configured, the user must select one; the active connection is highlighted. Uses the last saved Search time range, default 6 hours, and at most the latest 100 matches across seven telemetry tables. Analyze the returned flow oldest first, highlight errors and key information. If data exceeds the response budget, read the saved CSV path before analyzing. Do not use for arbitrary KQL queries or assume results are the entire history.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search_phrase": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Literal phrase to search across telemetry fields, for example an operation ID, correlation ID or error message. Not a KQL query."
+            }
+          },
+          "required": ["search_phrase"]
+        }
+      }
+    ],
     "configuration": {
       "title": "App Insights Explorer",
       "properties": {

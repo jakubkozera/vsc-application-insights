@@ -12,6 +12,7 @@ import { SavedQueriesTreeProvider } from './providers/savedQueriesTreeProvider';
 import { setExtensionUri } from './providers/treeItems';
 import { registerConnectionCommands } from './commands/connectionCommands';
 import { registerQueryCommands } from './commands/queryCommands';
+import { registerAnalyzeLogsTool } from './tools/analyzeLogsTool';
 
 let factoryRef: ClientFactory | undefined;
 
@@ -104,6 +105,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // Commands
   registerConnectionCommands(context, connectionStore, factory, connectionsTree);
   registerQueryCommands(context, connectionStore, queryStore, queryService, columnSettingsStore, viewPreferencesStore);
+  registerAnalyzeLogsTool(context, connectionStore);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('appInsightsExplorer.focus', () => {

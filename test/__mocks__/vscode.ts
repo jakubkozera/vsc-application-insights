@@ -1,6 +1,18 @@
 import * as vscode from 'vscode';
 
 const mock = {
+  CancellationError: class extends Error {
+    constructor() { super('Canceled'); }
+  },
+  LanguageModelToolResult: class {
+    constructor(public content: unknown[]) {}
+  },
+  LanguageModelTextPart: class {
+    constructor(public value: string) {}
+  },
+  lm: {
+    registerTool: () => ({ dispose: () => {} }),
+  },
   EventEmitter: class {
     private handlers: Function[] = [];
     event = (handler: Function) => {

@@ -20,6 +20,8 @@ Click **Analyze** next to **Export** to send the current table rows to GitHub Co
 
 This requires a VS Code Stable or Insiders version with Copilot Chat and Agent mode available. Analysis includes all fields present in the selected rows, including hidden columns, and shares this telemetry with Copilot under your configured policies. Temporary CSV files remain available for the chat and are not deleted automatically by the extension.
 
+In an Agent chat, use `#analyze_logs` with a search phrase, for example: `#analyze_logs Analyze the flow for operation a01b9d8a-6eb5-41d3-8220-932b17e0b215 and highlight errors`. The tool opens Search, fills the phrase, runs the query, exports matching rows to a temporary CSV, and returns the data for analysis in the same conversation. If multiple connections exist, you choose one from a list with the active connection highlighted. Search uses your last selected time range (6 hours by default) and returns up to the latest 100 matches. The tool requires a VS Code version supporting the Language Model Tools API; older versions retain the existing explorer commands.
+
 ### Failures Investigation
 Open a focused failures view to inspect exceptions and failed operations in a more efficient workflow than the Azure portal.
 
